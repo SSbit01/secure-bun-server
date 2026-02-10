@@ -1,4 +1,4 @@
-import { BASE64URL_OPTIONS, base64toUrl } from "#src/lib/base64"
+import { BASE64URL_OPTIONS } from "#src/lib/base64"
 import { compressNumber, decompressNumber } from "#src/lib/compression/number"
 import { ENVELOPE_ENCRYPTION_WRAP_LENGTH, KEK_ID_LENGTH, SESSION_MAX_AGE_MS } from "#src/lib/computed"
 import { createId, isBase64IdValid } from "#src/lib/crypto/id"
