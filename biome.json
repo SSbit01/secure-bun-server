@@ -1,0 +1,251 @@
+{
+  "$schema": "./node_modules/@biomejs/biome/configuration_schema.json",
+  "files": {
+    "includes": [
+      "**",
+      "!/build/",
+      "!/dist/",
+      "!/out/",
+      "!/out-tsc/",
+      "!/tmp/",
+      "!/.output/",
+      "!/coverage/",
+      "!/coverage/**",
+      "!*.tgz",
+      "!/node_modules/",
+      "!/jspm_packages/",
+      "!/.pnp",
+      "!.pnp.*",
+      "!.yarn/*",
+      "!.npm",
+      "!.yarn-integrity",
+      "!.pnpm-store",
+      "!.lock-wscript",
+      "!.astro/",
+      "!.next/",
+      "!.nuxt/",
+      "!.vercel/",
+      "!.svelte-kit/",
+      "!.vitepress/cache/",
+      "!.vitepress/dist/",
+      "!.turbo/",
+      "!.netlify/",
+      "!/.wrangler",
+      "!pids",
+      "!*.pid",
+      "!*.seed",
+      "!*.pid.lock",
+      "!.lcov",
+      "!.nyc_output/",
+      "!.vitest/",
+      "!.playwright/",
+      "!playwright-report/",
+      "!test-results/",
+      "!.lib-cov",
+      "!.grunt",
+      "!typings/",
+      "!logs/",
+      "!*.log",
+      "!npm-debug.log*",
+      "!yarn-debug.log*",
+      "!yarn-error.log*",
+      "!pnpm-debug.log*",
+      "!lerna-debug.log*",
+      "!.env*",
+      "!.dev.vars",
+      "!*.tsbuildinfo",
+      "!next-env.d.ts",
+      "!.deno/",
+      "!.bun",
+      "!.DS_Store",
+      "!._*",
+      "!.Spotlight-V100",
+      "!.Trashes",
+      "!ehthumbs.db",
+      "!Thumbs.db",
+      "!*.pem",
+      "!*.key",
+      "!*.cert",
+      "!.idea/",
+      "!.project",
+      "!.classpath",
+      "!.c9/",
+      "!*.launch",
+      "!*.sublime-workspace",
+      "!*.sublime-project",
+      "!.vscode/*",
+      ".vscode/settings.json",
+      ".vscode/tasks.json",
+      ".vscode/launch.json",
+      ".vscode/extensions.json",
+      "!*.swp",
+      "!*.swo",
+      "!*~",
+      "!storybook-static/",
+      "!.sentryclirc",
+      "!*.lock",
+      "!*.lockb",
+      "!npm-shrinkwrap.json",
+      "!pnpm-lock.yaml",
+      "!/LICENSE",
+      "!/LICENSES",
+      "!*LICENSE*",
+      "!*LICENSES*",
+      "!/license",
+      "!/licenses"
+    ],
+    "ignoreUnknown": true
+  },
+  "vcs": {
+    "enabled": true,
+    "clientKind": "git",
+    "useIgnoreFile": true
+  },
+  "linter": {
+    "enabled": true,
+    "rules": {
+      "recommended": true
+    }
+  },
+  "assist": {
+    "enabled": true,
+    "actions": {
+      "recommended": true,
+      "source": {
+        "organizeImports": "on",
+        "useSortedAttributes": "on",
+        "useSortedKeys": "on",
+        "useSortedProperties": "on"
+      }
+    }
+  },
+  "formatter": {
+    "enabled": true,
+    "formatWithErrors": false,
+    "indentStyle": "space",
+    "indentWidth": 2,
+    "lineWidth": 140,
+    "attributePosition": "auto",
+    "bracketSpacing": true,
+    "expand": "auto",
+    "useEditorconfig": false
+  },
+  "javascript": {
+    "parser": {
+      "jsxEverywhere": false
+    },
+    "formatter": {
+      "quoteStyle": "double",
+      "jsxQuoteStyle": "double",
+      "quoteProperties": "asNeeded",
+      "trailingCommas": "none",
+      "semicolons": "asNeeded",
+      "arrowParentheses": "asNeeded",
+      "enabled": true,
+      "indentStyle": "space",
+      "indentWidth": 2,
+      "lineWidth": 140,
+      "bracketSameLine": false,
+      "bracketSpacing": true,
+      "attributePosition": "auto",
+      "expand": "auto",
+      "operatorLinebreak": "after"
+    },
+    "jsxRuntime": "transparent",
+    "linter": {
+      "enabled": true
+    },
+    "assist": {
+      "enabled": true
+    }
+  },
+  "json": {
+    "parser": {
+      "allowTrailingCommas": false
+    },
+    "formatter": {
+      "enabled": true,
+      "indentStyle": "space",
+      "indentWidth": 2,
+      "lineWidth": 140,
+      "trailingCommas": "none",
+      "bracketSpacing": true,
+      "expand": "auto"
+    },
+    "linter": {
+      "enabled": true
+    },
+    "assist": {
+      "enabled": true
+    }
+  },
+  "css": {
+    "parser": {
+      "cssModules": true,
+      "tailwindDirectives": true
+    },
+    "formatter": {
+      "enabled": true,
+      "indentWidth": 2,
+      "lineWidth": 140,
+      "quoteStyle": "double"
+    },
+    "linter": {
+      "enabled": true
+    },
+    "assist": {
+      "enabled": true
+    }
+  },
+  "graphql": {
+    "formatter": {
+      "enabled": true,
+      "indentStyle": "space",
+      "indentWidth": 2,
+      "lineWidth": 140,
+      "quoteStyle": "double"
+    },
+    "linter": {
+      "enabled": true
+    },
+    "assist": {
+      "enabled": true
+    }
+  },
+  "grit": {
+    "formatter": {
+      "enabled": true,
+      "indentStyle": "space",
+      "indentWidth": 2,
+      "lineWidth": 140
+    },
+    "linter": {
+      "enabled": true
+    },
+    "assist": {
+      "enabled": true
+    }
+  },
+  "html": {
+    "parser": {
+      "interpolation": false
+    },
+    "formatter": {
+      "enabled": true,
+      "indentStyle": "space",
+      "indentWidth": 2,
+      "lineWidth": 140,
+      "attributePosition": "auto",
+      "bracketSameLine": false,
+      "whitespaceSensitivity": "strict",
+      "indentScriptAndStyle": false,
+      "selfCloseVoidElements": "never"
+    },
+    "linter": {
+      "enabled": true
+    },
+    "assist": {
+      "enabled": true
+    }
+  }
+}
