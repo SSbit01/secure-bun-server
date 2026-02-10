@@ -270,7 +270,6 @@ WHERE e.email=${email}`
     delete emailData.id
     delete emailData.is_backup
     delete emailData.session_id
-    console.log(emailData)
     return Response.json(emailData, APP_RES_INIT_200)
   }
 
