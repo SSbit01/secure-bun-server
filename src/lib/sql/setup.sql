@@ -33,25 +33,3 @@ CREATE TABLE IF NOT EXISTS user_emails (
   CONSTRAINT fk_user_emails_emails FOREIGN KEY (email_id) REFERENCES emails(id) ON DELETE CASCADE,
   CONSTRAINT fk_user_emails_users FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
-
-
-/**
- * ENABLING INTERNAL EVENT SCHEDULER.
- */
-
-SET GLOBAL event_scheduler = ON;
-
-
-CREATE EVENT IF NOT EXISTS delete_expired_rows
-ON SCHEDULE EVERY 1 DAY
-STARTS (CURRENT_DATE + INTERVAL 19 HOUR)  /* Every day at 19:00h */
-DO
-BEGIN
-
-  DELETE e
-  FROM emails e
-  LEFT JOIN user_emails ue ON e.id = ue.email_id
-  WHERE
-  ue.email_id IS NULL;
-
-END
