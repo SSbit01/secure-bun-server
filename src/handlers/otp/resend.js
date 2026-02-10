@@ -175,7 +175,7 @@ export default async function handleOtpResending(req) {
   currentOtpToken[OTP] = createOtp()
 
   /**
-   * @type {string|null}
+   * @type {(string|null)}
    */
   let responseBody = null
 
