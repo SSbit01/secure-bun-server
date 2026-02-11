@@ -278,7 +278,7 @@ WHERE e.email=${email}`
    */
   let sessionId
 
-  await sql.begin(async (tx) => {
+  await sql.begin(async tx => {
     let i = 0
     /**
      * @type {(number|bigint)}
