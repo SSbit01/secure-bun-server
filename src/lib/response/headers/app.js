@@ -6,7 +6,7 @@ const APP_ORIGIN = process.env.APP_ORIGIN
 
 
 /**
- * @type {Readonly<HeadersInit>}
+ * @type {HeadersInit}
  */
 const APP_RES_HEADERS = APP_ORIGIN
   ? Object.freeze({
