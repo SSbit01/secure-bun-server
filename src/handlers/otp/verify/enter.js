@@ -3,7 +3,13 @@ import { isValid as isEmailValid } from "mailchecker"
 
 import { BASE64URL_OPTIONS } from "#src/lib/base64"
 import { compressNumber } from "#src/lib/compression/number"
-import { OTP_INVALID_BLOCK_MS, ENVELOPE_ENCRYPTION_WRAP_LENGTH, KEK_ID_LENGTH } from "#src/lib/computed"
+
+import {
+  OTP_INVALID_BLOCK_MS,
+  ENVELOPE_ENCRYPTION_WRAP_LENGTH,
+  KEK_ID_LENGTH
+} from "#src/lib/computed"
+
 import { createId } from "#src/lib/crypto/id"
 import { createDek, encryptTextSymmetrically } from "#src/lib/crypto/symmetric/dek"
 import { createKek, wrapKey } from "#src/lib/crypto/symmetric/kek"
@@ -25,7 +31,14 @@ import {
 } from "#src/lib/otp/encode/token"
 
 import kmsOtp from "#src/lib/otp/kms"
-import { APP_RES_INIT_200, APP_RES_INIT_204, APP_RES_INIT_403, APP_RES_INIT_DEFAULT_BAD } from "#src/lib/response/app"
+
+import {
+  APP_RES_INIT_200,
+  APP_RES_INIT_204,
+  APP_RES_INIT_403,
+  APP_RES_INIT_DEFAULT_BAD
+} from "#src/lib/response/app"
+
 import Session from "#src/lib/session"
 import { msToSeconds } from "#src/lib/time"
 
