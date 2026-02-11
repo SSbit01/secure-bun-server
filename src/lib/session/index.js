@@ -340,27 +340,25 @@ WHERE session_id=${this.#id}`
    */
   async updateEmail(newEmail, backup = false) {
 
+    if ((await sql
+`UPDATE emails e
+INNER JOIN user_emails ue ON e.id=ue.email_id
+INNER JOIN users u ON ue.user_id=u.id
+SET e.email=${newEmail}
+WHERE ue.is_backup=${backup} AND u.session_id=${this.#id}`
+    ).affectedRows) {
+      return true
+    }
+
     let result = false
 
     await sql.begin(async tx => {
-      // If the previous email address has no invitations, it will be deleted by the event `delete_expired_rows`.
-      if ((await tx
-`DELETE ue FROM user_emails ue
-INNER JOIN users u ON ue.user_id=u.id
-WHERE
-ue.is_backup=${backup} AND
-u.session_id=${this.#id}`
-      ).affectedRows || backup) {
-        result = Boolean((await tx
-`INSERT INTO user_emails (user_id,is_backup,email)
-SELECT id,${backup},${newEmail}
-FROM users
-WHERE session_id=${this.#id}
-AS new
-ON DUPLICATE KEY
-UPDATE user_id=IF(user_id IS NULL,new.user_id,user_id),is_backup=IF(is_backup IS NULL,new.is_backup,is_backup)`
-        ).affectedRows)
-      }
+      const emailId = (await tx`INSERT INTO emails (email) VALUES (${newEmail})`).lastInsertRowid
+      result = Boolean((await tx
+`INSERT INTO user_emails (email_id,user_id,is_backup) VALUES
+(${emailId},${this.#id},${backup})
+ON DUPLICATE KEY UPDATE email_id=${emailId}`
+      ).affectedRows)
     })
 
     return result
