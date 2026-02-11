@@ -222,7 +222,12 @@ export default class Session {
   async deleteEmailBackup() {
     return Boolean((
       await sql
-      `DELETE ue FROM user_emails ue INNER JOIN users u ON ue.user_id=u.id WHERE ue.is_backup=1 AND u.session_id=${this.#id}`
+`DELETE e,ue FROM emails e
+INNER JOIN user_emails ue ON e.id=ue.email_id
+INNER JOIN users u ON ue.user_id=u.id
+WHERE
+ue.is_backup=1 AND
+u.session_id=${this.#id}`
     ).affectedRows)
   }
 
@@ -236,7 +241,8 @@ export default class Session {
   async isEmailTaken(email) {
 
     const [result] = await sql
-`SELECT EXISTS(SELECT 1 FROM user_emails WHERE email=${email} AND user_id IS NOT NULL) AS r
+`SELECT
+EXISTS(SELECT 1 FROM emails e LEFT JOIN user_emails ue ON e.id=ue.email_id WHERE e.email=${email} AND ue.user_id IS NOT NULL) AS r
 FROM users
 WHERE session_id=${this.#id}`
 
