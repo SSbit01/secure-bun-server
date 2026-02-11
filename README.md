@@ -61,7 +61,7 @@ This process ensures that each encrypted token can only be used for verification
 By default, the KMS stores key encryption keys (KEKs) in memory, but it can be customized in [`src/lib/kms.js`](/src/lib/kms.js)
 to use a persistent store like Redis or KV storage for serverless environments or distributed systems.
 
-If you are intested on this particular features, check out [secure-otp-server](https://github.com/SSbit01/secure-otp-server).
+If you are intested on this particular architecture, check out <https://github.com/SSbit01/secure-otp-server>.
 
 ## Getting Started
 
