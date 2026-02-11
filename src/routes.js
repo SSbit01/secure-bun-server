@@ -17,19 +17,19 @@ import handleUserAllSessionsLogout from "#src/handlers/user/logout/all"
 
 const ROUTES = Object.freeze({
 
-  "/otp": { POST: handleOtpEnterCreation },
-  "/otp/verify": { POST: handleOtpEnterVerification },
+  "/s/otp": { POST: handleOtpEnterCreation },
+  "/s/otp/verify": { POST: handleOtpEnterVerification },
 
-  "/otp/update": { POST: handleOtpUpdateCreation },
-  "/otp/verify/update": { POST: handleOtpUpdateVerification },
+  "/s/otp/update": { POST: handleOtpUpdateCreation },
+  "/s/otp/verify/update": { POST: handleOtpUpdateVerification },
   
-  "/otp/resend": { POST: handleOtpResending },
+  "/s/otp/resend": { POST: handleOtpResending },
 
-  "/user/delete": { POST: handleUserDeletion },
-  "/user/name": { POST: handleUserDisplayNameUpdate },
-  "/user/logout": { POST: handleUserLogout },
-  "/user/logout/other": { POST: handleUserOtherSessionsLogout },
-  "/user/logout/all": { POST: handleUserAllSessionsLogout }
+  "/s/user/delete": { POST: handleUserDeletion },
+  "/s/user/name": { POST: handleUserDisplayNameUpdate },
+  "/s/user/logout": { POST: handleUserLogout },
+  "/s/user/logout/other": { POST: handleUserOtherSessionsLogout },
+  "/s/user/logout/all": { POST: handleUserAllSessionsLogout }
 
 })
 

@@ -1,6 +1,6 @@
 # Secure Bun Server
 
-Template with authentication, KMS, and a MySQL database configured in Bun.
+Template with passwordless authentication via email, KMS, and a MySQL database configured in Bun.
 Perfect for building performant and secure platform servers.
 
 **IN DEVELOPMENT**

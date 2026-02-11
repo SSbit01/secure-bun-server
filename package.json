@@ -1,8 +1,14 @@
 {
   "name": "secure-bun-server",
-  "description": "Template with authentication, KMS, and a MySQL database configured in Bun. Perfect for building performant and secure platform servers.",
+  "description": "Template with passwordless authentication via email, KMS, and a MySQL database configured in Bun.",
   "version": "1.0.0",
   "author": "Stefan Samson <ss42701@outlook.com> (https://ssbit01.github.io/)",
+  "license": "MIT",
+  "repository": "github:SSbit01/secure-bun-server",
+  "homepage": "https://github.com/SSbit01/secure-bun-server#readme",
+  "bugs": {
+    "url": "https://github.com/SSbit01/secure-bun-server/issues"
+  },
   "type": "module",
   "private": true,
   "engines": {
