@@ -26,6 +26,12 @@ which is extremely fast on modern CPUs because they have dedicated hardware acce
 ([AES-NI](https://en.wikipedia.org/wiki/AES_instruction_set)),
 in addition to being quantum-resistant.
 
+### Email address validation
+
+Validates email addresses using the [mailchecker](https://www.npmjs.com/package/mailchecker) package and
+normalizes them with the [canonical-email](https://www.npmjs.com/package/canonical-email) package,
+removing any +alias and domain aliases.
+
 ### State Aware
 
 Prevents replay attacks in authentication by using single use verification keys, while remaining lightweight.
@@ -36,7 +42,7 @@ Store several OTP tokens per login session, each bound to a different credential
 Users can move between credentials without restarting the flow,
 and the login session encrypted cookie enforces a strict cap so tokens stay lightweight.
 
-## OTP Architecture
+## Serverless Authentication OTP Architecture
 
 This server uses a hybrid design that provides even more security than a stateful design.
 The server only stores random IDs, so it cannot know which credentials are currently being verified,
