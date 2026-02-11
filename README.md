@@ -5,8 +5,8 @@ Perfect for building performant and secure platform servers.
 
 **IN DEVELOPMENT**
 
-Secure Bun Server was originally created by Stefan Samson <ss42701@outlook.com> (https://ssbit01.github.io/)
-and released under the MIT license.
+Secure Bun Server was originally created by [SSbit01](https://ssbit01.github.io/)
+and released under the [MIT license](/LICENSE).
 
 He hopes you find it useful :)
 

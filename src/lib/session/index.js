@@ -25,13 +25,6 @@ const COOKIE_SESSION_OPTIONS = Object.freeze({
   maxAge: SESSION_MAX_AGE
 })
 
-/**
- * 200ms as default time between requests.
- * 
- * @type {number}
- */
-const MINIMUM_DELAY = 200
-
 const TOKEN_SEPARATOR = ","
 
 
@@ -126,13 +119,7 @@ export async function getSession(cookies) {
   }
 
 
-  const elapsed = Date.now() - lastValidAccessDate
-
-  if (elapsed < MINIMUM_DELAY) {
-    return
-  }
-
-  if (elapsed >= SESSION_MAX_AGE_MS) {
+  if ((Date.now() - lastValidAccessDate) >= SESSION_MAX_AGE_MS) {
     cookies.delete(COOKIE_SESSION)
     return
   }
