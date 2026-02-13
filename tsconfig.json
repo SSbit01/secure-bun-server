@@ -29,7 +29,8 @@
     // CUSTOM
     "checkJs": true,
     "paths": {
-      "#src/*": ["./src/*"]
+      "#src/*": ["./src/*"],
+      "#shared/*": ["./shared/*"]
     }
   },
   "include": ["src/**/*", "scripts/**/*"]

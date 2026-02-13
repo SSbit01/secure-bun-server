@@ -1,4 +1,4 @@
-import otpAttributes from "#src/shared/otp.json"
+import otpAttributes from "#shared/otp.json"
 
 import { decryptTextSymmetrically } from "#src/lib/crypto/symmetric/dek"
 import { COOKIE_OTP } from "#src/lib/cookie"

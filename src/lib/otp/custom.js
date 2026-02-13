@@ -1,5 +1,5 @@
 import process from "node:process"
-import otpAttributes from "#src/shared/otp.json"
+import otpAttributes from "#shared/otp.json"
 
 
 const isTest = process.env.NODE_ENV === "test"

@@ -1,4 +1,4 @@
-import otpAttributes from "#src/shared/otp.json"
+import otpAttributes from "#shared/otp.json"
 
 import { BASE64URL_OPTIONS } from "#src/lib/base64"
 import { compressNumber } from "#src/lib/compression/number"

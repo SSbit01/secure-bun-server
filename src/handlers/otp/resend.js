@@ -28,7 +28,7 @@ import sendOtp from "#src/lib/otp/send"
 import { APP_RES_INIT_200, APP_RES_INIT_DEFAULT_BAD } from "#src/lib/response/app"
 import { msToSeconds } from "#src/lib/time"
 
-import otpAttributes from "#src/shared/otp.json"
+import otpAttributes from "#shared/otp.json"
 
 
 /**

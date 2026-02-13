@@ -1,4 +1,4 @@
-import nameAttributes from "#src/shared/name.json"
+import nameAttributes from "#shared/name.json"
 import { regexDisallowedName, regexSeparators } from "#src/lib/regex"
 
 

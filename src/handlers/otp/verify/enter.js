@@ -43,7 +43,7 @@ import {
 import Session from "#src/lib/session"
 import { msToSeconds } from "#src/lib/time"
 
-import otpAttributes from "#src/shared/otp.json"
+import otpAttributes from "#shared/otp.json"
 
 
 

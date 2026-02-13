@@ -1,6 +1,6 @@
 import { isValid as isEmailValid } from "mailchecker"
 
-import otpAttributes from "#src/shared/otp.json"
+import otpAttributes from "#shared/otp.json"
 
 import { OTP_ATTEMPTS_BLOCK, OTP_MAX_ATTEMPTS } from "#src/lib/otp/custom"
 import { decodeCredential, encodeCredential } from "#src/lib/otp/encode/credential"

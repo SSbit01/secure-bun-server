@@ -1,7 +1,7 @@
 import fetch from "#src/handlers/fetch"
 import error from "#src/handlers/error"
 import ROUTES from "#src/routes"
-import photoAttributes from "#src/shared/photo.json"
+import photoAttributes from "#shared/photo.json"
 
 
 const OPTIONS = Object.freeze({
