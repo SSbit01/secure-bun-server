@@ -1,4 +1,4 @@
-import { regexBase64, regexBase64Url } from "#src/lib/regex"
+import { regexBase64Url } from "#src/lib/regex"
 
 
 /**
@@ -12,17 +12,6 @@ import { regexBase64, regexBase64Url } from "#src/lib/regex"
  */
 export function createId(length = 18) {
   return crypto.getRandomValues(new Uint8Array(length))
-}
-
-
-/**
- * @function isBase64IdValid
- * @param {string} id
- * @param {number} [length] - The length of a correct ID string (24 by default).
- * @returns {boolean}
- */
-export function isBase64IdValid(id, length = 24) {
-  return id.length === length && regexBase64.test(id)
 }
 
 

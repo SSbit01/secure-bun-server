@@ -1,7 +1,7 @@
 import { BASE64URL_OPTIONS } from "#src/lib/base64"
 import { compressNumber, decompressNumber } from "#src/lib/compression/number"
 import { ENVELOPE_ENCRYPTION_WRAP_LENGTH, KEK_ID_LENGTH, SESSION_MAX_AGE_MS } from "#src/lib/computed"
-import { createId, isBase64IdValid } from "#src/lib/crypto/id"
+import { createId, isBase64UrlIdValid } from "#src/lib/crypto/id"
 import { createDek } from "#src/lib/crypto/symmetric/dek"
 import { createKek, wrapKey } from "#src/lib/crypto/symmetric/kek"
 import { COOKIE_SESSION } from "#src/lib/cookie"
@@ -84,7 +84,7 @@ export async function getSession(cookies) {
     return
   }
 
-  const idString = isBase64IdValid(sessionInfo[0] || "") && sessionInfo[0]
+  const idString = isBase64UrlIdValid(sessionInfo[0] || "") && sessionInfo[0]
   const dekRotationDate = decompressNumber(sessionInfo[1] || "")
   const lastFetchDate = decompressNumber(sessionInfo[2] || "")
   const lastValidAccessDate = decompressNumber(sessionInfo[3] || "")

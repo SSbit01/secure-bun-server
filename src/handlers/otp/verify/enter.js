@@ -323,7 +323,7 @@ WHERE e.email=${email}`
   })
   
   // @ts-expect-error: `sessionId` is declared in the try block.
-  await new Session(cookies, sessionId.toBase64()).save()
+  await new Session(cookies, sessionId.toBase64(BASE64URL_OPTIONS)).save()
 
   return new Response(null, APP_RES_INIT_204)
 
