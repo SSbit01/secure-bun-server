@@ -1,4 +1,8 @@
+import { bytesToBase64Length } from "#src/lib/base64"
 import { regexBase64Url } from "#src/lib/regex"
+
+
+export const DEFAULT_ID_LENGTH = 18
 
 
 /**
@@ -10,7 +14,7 @@ import { regexBase64Url } from "#src/lib/regex"
  * @param {number} [length] - The length of the ID to generate (18 by default; higher entropy than UUIDv4 [122 vs 144 bits]).
  * @returns {Uint8Array<ArrayBuffer>} A random ID.
  */
-export function createId(length = 18) {
+export function createId(length = DEFAULT_ID_LENGTH) {
   return crypto.getRandomValues(new Uint8Array(length))
 }
 
@@ -21,6 +25,6 @@ export function createId(length = 18) {
  * @param {number} [length] - The length of a correct ID string (24 by default).
  * @returns {boolean}
  */
-export function isBase64UrlIdValid(id, length = 24) {
+export function isBase64UrlIdValid(id, length = bytesToBase64Length(DEFAULT_ID_LENGTH)) {
   return id.length === length && regexBase64Url.test(id)
 }

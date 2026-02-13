@@ -13,13 +13,3 @@ export const BASE64URL_OPTIONS = Object.freeze({
 export function bytesToBase64Length(bytesLength) {
   return Math.ceil(bytesLength / 3 * 4)
 }
-
-
-/**
- * @function base64toUrl
- * @param {string} base64
- * @return {string}
- */
-export function base64toUrl(base64) {
-  return Uint8Array.fromBase64(base64).toBase64(BASE64URL_OPTIONS)
-}
