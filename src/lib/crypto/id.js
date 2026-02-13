@@ -1,4 +1,3 @@
-import { BASE64URL_OPTIONS } from "#src/lib/base64"
 import { regexBase64, regexBase64Url } from "#src/lib/regex"
 
 
@@ -13,16 +12,6 @@ import { regexBase64, regexBase64Url } from "#src/lib/regex"
  */
 export function createId(length = 18) {
   return crypto.getRandomValues(new Uint8Array(length))
-}
-
-
-/**
- * @function createBase64UrlId
- * @param {number} [length] - The length (in bytes) of the ID to generate (18 by default; higher entropy than UUIDv4 [122 vs 144 bits]).
- * @returns {string} A string random ID.
- */
-export function createBase64UrlId(length = 18) {
-  return createId(length).toBase64(BASE64URL_OPTIONS)
 }
 
 

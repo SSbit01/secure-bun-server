@@ -11,11 +11,11 @@
  * - Redis, DynamoDB or similar are the best alternatives.
  */
 
+import { BASE64URL_OPTIONS } from "#src/lib/base64"
 import { OTP_MAX_AGE_MS } from "#src/lib/computed"
-import { createBase64UrlId } from "#src/lib/crypto/id"
+import { createId } from "#src/lib/crypto/id"
+import { MAX_KMS_STORE_ATTEMPTS } from "#src/lib/kms"
 
-
-const MAX_STORE_ATTEMPTS = 3
 
 /**
  * @type {Map<string,number>}
@@ -52,11 +52,11 @@ export async function createOtpTokenListId() {
   let i = 0
 
   do {
-    newId = createBase64UrlId()
+    newId = createId().toBase64(BASE64URL_OPTIONS)
     i++
-  } while (idStorage.has(newId) && i < MAX_STORE_ATTEMPTS)
+  } while (idStorage.has(newId) && i < MAX_KMS_STORE_ATTEMPTS)
 
-  if (i >= MAX_STORE_ATTEMPTS) {
+  if (i >= MAX_KMS_STORE_ATTEMPTS) {
     throw new Error("Too many attempts to store a OTP ID.")
   }
 
@@ -141,11 +141,11 @@ export async function replaceOtpTokenId(oldId, expires) {
   let i = 0
 
   do {
-    newId = createBase64UrlId()
+    newId = createId().toBase64(BASE64URL_OPTIONS)
     i++
-  } while ((idStorage.has(newId) || newId === oldId) && i < MAX_STORE_ATTEMPTS)
+  } while ((idStorage.has(newId) || newId === oldId) && i < MAX_KMS_STORE_ATTEMPTS)
 
-  if (i >= MAX_STORE_ATTEMPTS) {
+  if (i >= MAX_KMS_STORE_ATTEMPTS) {
     throw new Error("Too many attempts to replace a OTP ID.")
   }
 

@@ -4,9 +4,11 @@ import { isValid as isEmailValid } from "mailchecker"
 import { BASE64URL_OPTIONS } from "#src/lib/base64"
 import { compressNumber } from "#src/lib/compression/number"
 import { OTP_INVALID_BLOCK_MS, ENVELOPE_ENCRYPTION_WRAP_LENGTH, KEK_ID_LENGTH } from "#src/lib/computed"
+import { createId } from "#src/lib/crypto/id"
 import { createKek, wrapKey } from "#src/lib/crypto/symmetric/kek"
 import { createDek, encryptTextSymmetrically } from "#src/lib/crypto/symmetric/dek"
 import { COOKIE_OTP } from "#src/lib/cookie"
+import { KEK_ID_BYTES, MAX_KMS_STORE_ATTEMPTS } from "#src/lib/kms"
 import { blockOtpToken, getOtpTokenList, isOtpValid, setOtpCookie } from "#src/lib/otp"
 import { OTP_ATTEMPTS_BLOCK } from "#src/lib/otp/custom"
 import { deleteOtpTokenId, replaceOtpTokenId } from "#src/lib/otp/id"
@@ -157,6 +159,11 @@ export default async function handleOtpUpdateVerification(req) {
   if (currentOtpToken[OTP] !== otp) {
 
     /**
+     * @type {Uint8Array<ArrayBuffer>}
+     */
+    let additionalData
+
+    /**
      * Kek ID + Wrapped DEK.
      * 
      * @type {string}
@@ -166,6 +173,7 @@ export default async function handleOtpUpdateVerification(req) {
     const currentKekId = await kmsOtp.getCurrentId()
 
     if (currentKekId === kekId) {
+      additionalData = Uint8Array.fromBase64(kekId, BASE64URL_OPTIONS)
       envelope = otpData.substring(0, ENVELOPE_ENCRYPTION_WRAP_LENGTH)
     } else {
       /**
@@ -175,15 +183,20 @@ export default async function handleOtpUpdateVerification(req) {
       [dek, kek] = await Promise.all([createDek(), kmsOtp.get(currentKekId)])
       if (kek) {
         kekId = currentKekId
+        additionalData = Uint8Array.fromBase64(kekId, BASE64URL_OPTIONS)
         envelope = kekId + new Uint8Array(await wrapKey(dek, kek)).toBase64(BASE64URL_OPTIONS)
       } else {
-        kek = await createKek()
-        /**
-         * @type {ArrayBuffer}
-         */
-        let wrappedDek;
-        [kekId, wrappedDek] = await Promise.all([kmsOtp.store(kek), wrapKey(dek, kek)])
-        envelope = kekId + new Uint8Array(wrappedDek).toBase64(BASE64URL_OPTIONS)
+        let i = 0
+        do {
+          additionalData = createId(KEK_ID_BYTES)
+          kekId = additionalData.toBase64(BASE64URL_OPTIONS)
+          kek = await createKek()
+          i++
+        } while(!await kmsOtp.store(kekId, kek) && i < MAX_KMS_STORE_ATTEMPTS)
+        if (i >= MAX_KMS_STORE_ATTEMPTS) {
+          throw new Error("Too many attempts to store a KEK in KMS: OTP")
+        }
+        envelope = kekId + new Uint8Array(await wrapKey(dek, kek)).toBase64(BASE64URL_OPTIONS)
       }
     }
 
@@ -225,7 +238,8 @@ export default async function handleOtpUpdateVerification(req) {
       cookies,
       envelope + await encryptTextSymmetrically(
         dek,
-        encodeOtpTokenList(newEncodedOtpTokenList)
+        encodeOtpTokenList(newEncodedOtpTokenList),
+        additionalData
       ),
       msToSeconds(expires, Math.trunc)
     )

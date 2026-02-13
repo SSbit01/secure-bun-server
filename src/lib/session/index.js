@@ -6,6 +6,7 @@ import { createDek } from "#src/lib/crypto/symmetric/dek"
 import { createKek, wrapKey } from "#src/lib/crypto/symmetric/kek"
 import { COOKIE_SESSION } from "#src/lib/cookie"
 import { encryptTextSymmetrically, decryptTextSymmetrically } from "#src/lib/crypto/symmetric/dek"
+import { KEK_ID_BYTES, MAX_KMS_STORE_ATTEMPTS } from "#src/lib/kms"
 import sql from "#src/lib/sql"
 import production from "#src/lib/production"
 import { SESSION_MAX_AGE } from "#src/lib/session/custom"
@@ -272,13 +273,30 @@ WHERE session_id=${this.#id}`
    */
   async save() {
 
+    /**
+     * @type {Uint8Array<ArrayBuffer>}
+     */
+    let additionalData
+
     let kekId = await kmsSession.getCurrentId()
 
-    if (!this.#dek || !this.#dekRotationDate || this.#dekRotationDate <= Date.now() || !this.#envelope.startsWith(kekId)) {
+    if (this.#dek && this.#dekRotationDate && this.#dekRotationDate > Date.now() && this.#envelope.startsWith(kekId)) {
+      additionalData = Uint8Array.fromBase64(kekId, BASE64URL_OPTIONS)
+    } else {
       let kek = await kmsSession.get(kekId)
-      if (!kek) {
-        kek = await createKek()
-        kekId = await kmsSession.store(kek)
+      if (kek) {
+        additionalData = Uint8Array.fromBase64(kekId, BASE64URL_OPTIONS)
+      } else {
+        let i = 0
+        do {
+          additionalData = createId(KEK_ID_BYTES)
+          kekId = additionalData.toBase64(BASE64URL_OPTIONS)
+          kek = await createKek()
+          i++
+        } while(!await kmsSession.store(kekId, kek) && i < MAX_KMS_STORE_ATTEMPTS)
+        if (i >= MAX_KMS_STORE_ATTEMPTS) {
+          throw new Error("Too many attempts to store a KEK in KMS: SESSION")
+        }
       }
       this.#dek = await createDek()
       this.#envelope = kekId + new Uint8Array(await wrapKey(this.#dek, kek)).toBase64(BASE64URL_OPTIONS)
@@ -291,10 +309,13 @@ WHERE session_id=${this.#id}`
       COOKIE_SESSION,
       this.#envelope + await encryptTextSymmetrically(
         this.#dek,
-        this.#idString + TOKEN_SEPARATOR +
-        compressNumber(this.#dekRotationDate) + TOKEN_SEPARATOR +
-        (this.#lastFetchDate ? compressNumber(this.#lastFetchDate) : compressedDateNow) + TOKEN_SEPARATOR +
-        compressedDateNow
+        (
+          this.#idString + TOKEN_SEPARATOR +
+          compressNumber(this.#dekRotationDate) + TOKEN_SEPARATOR +
+          (this.#lastFetchDate ? compressNumber(this.#lastFetchDate) : compressedDateNow) + TOKEN_SEPARATOR +
+          compressedDateNow
+        ),
+        additionalData
       ),
       COOKIE_SESSION_OPTIONS
     )

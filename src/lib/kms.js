@@ -1,6 +1,21 @@
+/**
+ * This server generates Key Encryption Keys (KEKs) with their IDs, and it needs to store them somewhere.
+ * This file defines functions for storing KEKs.
+ * 
+ * Therefore, a simple in-memory KMS implementation has been defined using a JavaScript Map.
+ * 
+ * - It is the cheapest and easiest implementation and works fine if the server is always on.
+ * - This implementation does not persist KEKs, so all KEKs will be lost when the server restarts.
+ * - In-memory implementations do not work well in distributed systems (e.g. multiple server instances behind a load balancer).
+ * - In-memory implementations do not work well in serverless environments, because they are constantly closing and opening.
+ * - Redis, DynamoDB or similar are the best alternatives.
+ * 
+ * A custom key rotation implementation with envelope encryption with a specialized KMS is recommended.
+ */
+
 import { BASE64URL_OPTIONS } from "#src/lib/base64"
 import { KEK_ID_LENGTH, SESSION_MAX_AGE_MS } from "#src/lib/computed"
-import { createBase64UrlId, isBase64UrlIdValid } from "#src/lib/crypto/id"
+import { createId, isBase64UrlIdValid } from "#src/lib/crypto/id"
 import { WRAPPED_DEK_BYTES, createKek, unwrapKey } from "#src/lib/crypto/symmetric/kek"
 
 
@@ -15,7 +30,6 @@ const EXPIRES = 0
 const ROTATE = 1
 const KEY = 2
 
-const MAX_STORE_ATTEMPTS = 3
 const ROTATE_TIME = 7776000000  // 90 days in miliseconds.
 
 
@@ -24,6 +38,11 @@ const ROTATE_TIME = 7776000000  // 90 days in miliseconds.
  * @type {number}
  */
 export const KEK_ID_BYTES = 12
+
+/**
+ * @type {number}
+ */
+export const MAX_KMS_STORE_ATTEMPTS = 3
 
 
 
@@ -77,7 +96,7 @@ export default class KMS {
     }
   
     if (!currentKeyEntry || currentKeyEntry[1][ROTATE] <= dateNow) {
-      return await this.store(await createKek())
+      return await this.pushNewKey()
     }
   
     return currentKeyEntry[0]
@@ -151,6 +170,32 @@ export default class KMS {
 
 
   /**
+   * Pushes a new encryption key to the KMS.
+   * 
+   * @async
+   * @function pushNewKey
+   * @return {Promise<string>} The ID of the stored key.
+   */
+  async pushNewKey() {
+
+    let newKeyId = ""
+  
+    let i = 0
+
+    do {
+      newKeyId = createId(KEK_ID_BYTES).toBase64(BASE64URL_OPTIONS)
+      i++
+    } while(!await this.store(newKeyId, await createKek()) && i < MAX_KMS_STORE_ATTEMPTS)
+    if (i >= MAX_KMS_STORE_ATTEMPTS) {
+      throw new Error("Too many attempts to store a KEK in KMS: " + this.#name)
+    }
+
+    return newKeyId
+  
+  }
+
+
+  /**
    * Retrieves an encryption key by its ID.
    * 
    * @async
@@ -163,12 +208,12 @@ export default class KMS {
     /**
      * @type {string}
      */
-    let id = ""
+    let newKeyId = ""
 
     if (keyId === await this.getCurrentId()) {
       const prefix = this.#name + "/" + keyId + ": "
       console.warn(prefix + "An emergency rotation of the current KEK has been initiated.")
-      id = await this.store(await createKek())
+      newKeyId = await this.pushNewKey()
       console.log(prefix + "KEK rotation completed.")
     }
 
@@ -177,7 +222,7 @@ export default class KMS {
      */
     this.#storage.delete(keyId)
 
-    return id
+    return newKeyId
 
   }
   
@@ -189,47 +234,31 @@ export default class KMS {
    * 
    * @async
    * @function store
+   * @param {string} keyId - The ID of the encryption key to store.
    * @param {CryptoKey} key - The encryption key to store.
-   * @return {Promise<string>} The ID of the stored key.
+   * @return {Promise<boolean>} Whether the key was stored successfully.
    */
-  async store(key) {
+  async store(keyId, key) {
   
     // Manually clean up expired keys, as this implementation cannot automatically delete them.
     
     const dateNow = Date.now()
   
-    for (const [keyId, [expires]] of this.#storage) {
-      if (expires <= dateNow) {
-        this.#storage.delete(keyId)
+    for (const [currentKeyId, [currentExpires]] of this.#storage) {
+      if (currentExpires <= dateNow) {
+        this.#storage.delete(currentKeyId)
       }
+    }
+
+    if (this.#storage.has(keyId)) {
+      return false
     }
   
     const rotate = dateNow + ROTATE_TIME
   
-    /**
-     * @type {KeyData}
-     */
-    const data = [rotate + this.#ageMsAfterRotation, rotate, key]
-    
-    /**
-     * @type {string}
-     */
-    let id
-
-    let i = 0
+    this.#storage.set(keyId, [rotate + this.#ageMsAfterRotation, rotate, key])
   
-    do {
-      id = createBase64UrlId(KEK_ID_BYTES)
-      i++
-    } while (this.#storage.has(id) && i < MAX_STORE_ATTEMPTS)
-    
-    if (i >= MAX_STORE_ATTEMPTS) {
-      throw new Error("Too many attempts to store a key in: " + this.#name)
-    }
-  
-    this.#storage.set(id, data)
-  
-    return id
+    return true
   
   }
 

@@ -3,9 +3,11 @@ import otpAttributes from "#src/shared/otp.json"
 import { BASE64URL_OPTIONS } from "#src/lib/base64"
 import { compressNumber } from "#src/lib/compression/number"
 import { ENVELOPE_ENCRYPTION_WRAP_LENGTH, KEK_ID_LENGTH, OTP_RESEND_BLOCK_MS} from "#src/lib/computed"
+import { createId } from "#src/lib/crypto/id"
 import { createKek, wrapKey } from "#src/lib/crypto/symmetric/kek"
 import { createDek, encryptTextSymmetrically } from "#src/lib/crypto/symmetric/dek"
 import { COOKIE_OTP } from "#src/lib/cookie"
+import { KEK_ID_BYTES, MAX_KMS_STORE_ATTEMPTS } from "#src/lib/kms"
 import { getOtpTokenList, setOtpCookie } from "#src/lib/otp"
 import { createOtp } from "#src/lib/otp/custom"
 
@@ -52,9 +54,24 @@ async function generateOtpTokenListCreationResponse(cookies, credential) {
     kek = await kmsOtp.get(kekId)
   }
 
-  if (!kek) {
-    kek = await createKek()
-    kekId = await kmsOtp.store(kek)
+  /**
+   * @type {Uint8Array<ArrayBuffer>}
+   */
+  let additionalData
+
+  if (kek) {
+    additionalData = Uint8Array.fromBase64(kekId, BASE64URL_OPTIONS)
+  } else {
+    let i = 0
+    do {
+      additionalData = createId(KEK_ID_BYTES)
+      kekId = additionalData.toBase64(BASE64URL_OPTIONS)
+      kek = await createKek()
+      i++
+    } while(!await kmsOtp.store(kekId, kek) && i < MAX_KMS_STORE_ATTEMPTS)
+    if (i >= MAX_KMS_STORE_ATTEMPTS) {
+      throw new Error("Too many attempts to store a KEK in KMS: OTP")
+    }
   }
 
   const dek = await createDek()
@@ -71,7 +88,8 @@ async function generateOtpTokenListCreationResponse(cookies, credential) {
     wrappedDekString +
     await encryptTextSymmetrically(
       dek,
-      encodeOtpTokenList([createEncodedOtpToken(credential, expires, otp, resendBlock), id])
+      encodeOtpTokenList([createEncodedOtpToken(credential, expires, otp, resendBlock), id]),
+      additionalData
     ),
     expiresSeconds
   )
@@ -177,6 +195,11 @@ export default async function generateOtpCreationResponse(cookies, credential) {
    */
 
   /**
+   * @type {Uint8Array<ArrayBuffer>}
+   */
+  let additionalData
+
+  /**
    * Kek ID + Wrapped DEK.
    * 
    * @type {string}
@@ -186,6 +209,7 @@ export default async function generateOtpCreationResponse(cookies, credential) {
   const currentKekId = await kmsOtp.getCurrentId()
 
   if (currentKekId === kekId) {
+    additionalData = Uint8Array.fromBase64(kekId, BASE64URL_OPTIONS)
     envelope = otpData.substring(0, ENVELOPE_ENCRYPTION_WRAP_LENGTH)
   } else {
     /**
@@ -195,15 +219,20 @@ export default async function generateOtpCreationResponse(cookies, credential) {
     [dek, kek] = await Promise.all([createDek(), kmsOtp.get(currentKekId)])
     if (kek) {
       kekId = currentKekId
+      additionalData = Uint8Array.fromBase64(kekId, BASE64URL_OPTIONS)
       envelope = kekId + new Uint8Array(await wrapKey(dek, kek)).toBase64(BASE64URL_OPTIONS)
     } else {
-      kek = await createKek()
-      /**
-       * @type {ArrayBuffer}
-       */
-      let wrappedDek;
-      [kekId, wrappedDek] = await Promise.all([kmsOtp.store(kek), wrapKey(dek, kek)])
-      envelope = kekId + new Uint8Array(wrappedDek).toBase64(BASE64URL_OPTIONS)
+      let i = 0
+      do {
+        additionalData = createId(KEK_ID_BYTES)
+        kekId = additionalData.toBase64(BASE64URL_OPTIONS)
+        kek = await createKek()
+        i++
+      } while(!await kmsOtp.store(kekId, kek) && i < MAX_KMS_STORE_ATTEMPTS)
+      if (i >= MAX_KMS_STORE_ATTEMPTS) {
+        throw new Error("Too many attempts to store a KEK in KMS: OTP")
+      }
+      envelope = kekId + new Uint8Array(await wrapKey(dek, kek)).toBase64(BASE64URL_OPTIONS)
     }
   }
 
@@ -239,7 +268,8 @@ export default async function generateOtpCreationResponse(cookies, credential) {
     cookies,
     envelope + await encryptTextSymmetrically(
       dek,
-      encodeOtpTokenList(newEncodedOtpTokenList)
+      encodeOtpTokenList(newEncodedOtpTokenList),
+      additionalData
     ),
     msToSeconds(expires, Math.trunc)
   )
