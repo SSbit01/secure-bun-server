@@ -54,8 +54,8 @@ The encrypted list is sent to the client in a secure, `HttpOnly` cookie.
 2. A random ID linked to the list is generated and stored on the server.
 3. When the client attempts to verify an OTP token, it sends back the encrypted list.
 The server selects the current credential's token, and after each verification attempt updates its ID.
-4. The encrypted cookie stores at most `OTP_MAX_CREDENTIALS` entries (specified in [`src/lib/otp/custom.js`](src/lib/otp/custom.js)), so users can switch between
-multiple credentials without restarting the flow while keeping the session footprint small.
+4. The encrypted cookie stores at most `OTP_MAX_CREDENTIALS` entries (specified in [`src/lib/otp/custom.js`](src/lib/otp/custom.js)),
+so users can switch between multiple credentials without restarting the flow while keeping the session footprint small.
 
 This process ensures that each encrypted token can only be used for verification once, effectively preventing replay attacks.
 By default, the KMS stores key encryption keys (KEKs) in memory, but it can be customized in [`src/lib/kms.js`](/src/lib/kms.js)
@@ -104,8 +104,8 @@ The test suite is written with Bun's built-in test runner. Use `bun run test` to
 
 This project is [MIT licensed](/LICENSE).
 
-The default NPM build scripts automatically use the [generate-license-file](https://www.npmjs.com/package/generate-license-file) CLI
-to bundle all dependency licenses with your build, ensuring effortless compliance.
+The default NPM build scripts automatically use the [generate-license-file](https://www.npmjs.com/package/generate-license-file)
+CLI to bundle all dependency licenses with your build, ensuring effortless compliance.
 
 ---
 
