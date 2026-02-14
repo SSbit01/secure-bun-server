@@ -151,14 +151,13 @@ export default async function handleOtpUpdateVerification(req) {
   if (
     !currentOtpToken ||
     dateNow >= currentOtpToken[EXPIRES] ||
-    /**
-     * [OTP_BLOCK] already filtered in `decodeOtpString`.
-     */
-    currentOtpToken[OTP_BLOCK] ||
-    !currentOtpToken[ATTEMPTS]
+    !currentOtpToken[ATTEMPTS] ||
+    (currentOtpToken[OTP_BLOCK] && currentOtpToken[OTP_BLOCK] > dateNow)
   ) {
     return new Response(null, APP_RES_INIT_DEFAULT_BAD)
   }
+
+  delete currentOtpToken[OTP_BLOCK]
 
 
   if (currentOtpToken[OTP] !== otp) {

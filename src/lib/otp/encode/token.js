@@ -14,6 +14,7 @@ import { decodeCredential, encodeCredential } from "#src/lib/otp/encode/credenti
 import { compressNumber, decompressNumber } from "#src/lib/compression/number"
 import { OTP_INVALID_BLOCK_MS, OTP_MAX_AGE_MS, OTP_RESEND_BLOCK_MS } from "#src/lib/computed"
 import { regexOtp } from "#src/lib/regex"
+import { msToSeconds } from "#src/lib/time"
 
 
 /**
@@ -36,6 +37,7 @@ export const RESEND_BLOCK = 4
 export const OTP_BLOCK = 5
 
 const OTP_SEPARATOR = "|"
+const OTP_DOUBLE_SEPARATOR = OTP_SEPARATOR + OTP_SEPARATOR
 
 
 /**
@@ -137,44 +139,6 @@ export function decodeOtpToken(encodedOtpToken, dateNow = Date.now()) {
  */
 export function encodeOtpToken(otpToken) {
 
-  /**
-   * @type {any}
-   */
-  const otpTokenCopy = otpToken.slice()
-
-  otpTokenCopy[CREDENTIAL] = encodeCredential(otpTokenCopy[CREDENTIAL])
-
-  otpTokenCopy[EXPIRES] = compressNumber(otpTokenCopy[EXPIRES])
-
-  if (otpTokenCopy[OTP]) {
-    otpTokenCopy[RESEND_BLOCK] &&= compressNumber(otpTokenCopy[RESEND_BLOCK])
-    otpTokenCopy[OTP_BLOCK] &&= compressNumber(otpTokenCopy[OTP_BLOCK])
-  }
-
-  /**
-   * Remove empty elements from the end of the array.
-   */
-
-  let i = otpTokenCopy.length - 1
-
-  while (!otpTokenCopy[i]) {
-    i--
-  }
-
-  otpTokenCopy.length = i + 1
-
-  return otpTokenCopy.join(OTP_SEPARATOR)
-
-}
-
-
-/**
- * @function getOtpTokenData
- * @param {OtpToken} otpToken
- * @returns {string}
- */
-export function encodeOtpTokenData(otpToken) {
-
   let result = (
     encodeCredential(otpToken[CREDENTIAL]) + OTP_SEPARATOR +
     compressNumber(otpToken[EXPIRES])
@@ -186,20 +150,46 @@ export function encodeOtpTokenData(otpToken) {
       otpToken[OTP] + OTP_SEPARATOR +
       otpToken[ATTEMPTS]
     )
+    if (otpToken[RESEND_BLOCK]) {
+      result += (
+        OTP_SEPARATOR +
+        compressNumber(otpToken[RESEND_BLOCK])
+      )
+      if (otpToken[OTP_BLOCK]) {
+        result += (
+          OTP_SEPARATOR +
+          compressNumber(otpToken[OTP_BLOCK])
+        )
+      }
+    } else if (otpToken[OTP_BLOCK]) {
+      result += (
+        OTP_DOUBLE_SEPARATOR +
+        compressNumber(otpToken[OTP_BLOCK])
+      )
+    }
   }
+
+  return result
+
+}
+
+
+/**
+ * @function encodeOtpTokenData
+ * @param {OtpToken} otpToken
+ * @returns {string}
+ */
+export function encodeOtpTokenData(otpToken) {
+
+  let result = compressNumber(msToSeconds(otpToken[EXPIRES], Math.trunc))
 
   if (otpToken[RESEND_BLOCK]) {
-    result += (
-      OTP_SEPARATOR +
-      compressNumber(otpToken[RESEND_BLOCK])
-    )
-  }
-
-  if (otpToken[OTP_BLOCK]) {
-    result += (
-      OTP_SEPARATOR +
-      compressNumber(otpToken[OTP_BLOCK])
-    )
+    result += "," + compressNumber(msToSeconds(otpToken[RESEND_BLOCK], Math.ceil))
+    if (otpToken[OTP_BLOCK]) {
+      result += "," + compressNumber(msToSeconds(otpToken[OTP_BLOCK], Math.ceil))
+    }
+  } else if (otpToken[OTP_BLOCK]) {
+    result += ",," + compressNumber(msToSeconds(otpToken[OTP_BLOCK], Math.ceil))
   }
 
   return result
