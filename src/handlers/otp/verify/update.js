@@ -9,7 +9,7 @@ import { createKek, wrapKey } from "#src/lib/crypto/symmetric/kek"
 import { createDek, encryptTextSymmetrically } from "#src/lib/crypto/symmetric/dek"
 import { COOKIE_OTP } from "#src/lib/cookie"
 import { KEK_ID_BYTES, MAX_KMS_STORE_ATTEMPTS } from "#src/lib/kms"
-import { blockOtpToken, getOtpTokenList, isOtpValid, setOtpCookie } from "#src/lib/otp"
+import { OTP_TOKEN_SEPARATOR, blockOtpToken, getOtpTokenList, isOtpValid, setOtpCookie } from "#src/lib/otp"
 import { OTP_ATTEMPTS_BLOCK } from "#src/lib/otp/custom"
 import { deleteOtpTokenId, replaceOtpTokenId } from "#src/lib/otp/id"
 
@@ -20,8 +20,7 @@ import {
   ATTEMPTS,
   OTP_BLOCK,
   decodeOtpToken,
-  encodeOtpToken,
-  encodeOtpTokenList
+  encodeOtpToken
 } from "#src/lib/otp/encode/token"
 
 import kmsOtp from "#src/lib/otp/kms"
@@ -79,7 +78,13 @@ export default async function handleOtpUpdateVerification(req) {
     return new Response(null, APP_RES_INIT_DEFAULT_BAD)
   }
 
-  const encodedOtpTokenList = await getOtpTokenList(dek, otpData.substring(ENVELOPE_ENCRYPTION_WRAP_LENGTH))
+  let additionalData = Uint8Array.fromBase64(kekId, BASE64URL_OPTIONS)
+
+  const encodedOtpTokenList = await getOtpTokenList(
+    dek,
+    otpData.substring(ENVELOPE_ENCRYPTION_WRAP_LENGTH),
+    additionalData
+  )
 
   if (!encodedOtpTokenList) {
     cookies.delete(COOKIE_OTP)
@@ -159,11 +164,6 @@ export default async function handleOtpUpdateVerification(req) {
   if (currentOtpToken[OTP] !== otp) {
 
     /**
-     * @type {Uint8Array<ArrayBuffer>}
-     */
-    let additionalData
-
-    /**
      * Kek ID + Wrapped DEK.
      * 
      * @type {string}
@@ -173,7 +173,6 @@ export default async function handleOtpUpdateVerification(req) {
     const currentKekId = await kmsOtp.getCurrentId()
 
     if (currentKekId === kekId) {
-      additionalData = Uint8Array.fromBase64(kekId, BASE64URL_OPTIONS)
       envelope = otpData.substring(0, ENVELOPE_ENCRYPTION_WRAP_LENGTH)
     } else {
       /**
@@ -238,7 +237,7 @@ export default async function handleOtpUpdateVerification(req) {
       cookies,
       envelope + await encryptTextSymmetrically(
         dek,
-        encodeOtpTokenList(newEncodedOtpTokenList),
+        newEncodedOtpTokenList.join(OTP_TOKEN_SEPARATOR),
         additionalData
       ),
       msToSeconds(expires, Math.trunc)

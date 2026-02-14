@@ -1,3 +1,10 @@
+/**
+ * IMPORTANT!
+ * 
+ * ORDER IS SET MANUALLY IN `createEncodedOtpToken` AND `decodeOtpToken` FOR BETTER PERFORMANCE
+ * (no need to create additional objects and arrays).
+ */
+
 import { isValid as isEmailValid } from "mailchecker"
 
 import otpAttributes from "#shared/otp.json"
@@ -7,17 +14,18 @@ import { decodeCredential, encodeCredential } from "#src/lib/otp/encode/credenti
 import { compressNumber, decompressNumber } from "#src/lib/compression/number"
 import { OTP_INVALID_BLOCK_MS, OTP_MAX_AGE_MS, OTP_RESEND_BLOCK_MS } from "#src/lib/computed"
 import { regexOtp } from "#src/lib/regex"
-import { msToSeconds } from "#src/lib/time"
 
 
-export type OtpToken = [
-  credential: string,
-  expires: number,
-  otp?: string,
-  attempts?: number,
-  resendBlock?: number,
-  otpBlock?: number
-]
+/**
+ * @typedef {[
+ *  credential: string,
+ *  expires: number,
+ *  otp?: string,
+ *  attempts?: number,
+ *  resendBlock?: number,
+ *  otpBlock?: number
+ * ]} OtpToken
+ */
 
 
 export const CREDENTIAL = 0
@@ -27,24 +35,22 @@ export const ATTEMPTS = 3
 export const RESEND_BLOCK = 4
 export const OTP_BLOCK = 5
 
-
 const OTP_SEPARATOR = "|"
-const OTP_TOKEN_SEPARATOR = ","
 
 
 /**
  * @function createOtpToken
- * @param {string} credential
- * @param {number} expires
- * @param {string} otp
- * @param {number} resendBlock
+ * @param {OtpToken[CREDENTIAL]} credential
+ * @param {OtpToken[EXPIRES]} expires
+ * @param {NonNullable<OtpToken[OTP]>} otp
+ * @param {NonNullable<OtpToken[RESEND_BLOCK]>} resendBlock
  * @returns {string}
  */
 export function createEncodedOtpToken(
-  credential: string,
-  expires: number,
-  otp: string,
-  resendBlock: number
+  credential,
+  expires,
+  otp,
+  resendBlock
 ) {
 
   return (
@@ -64,9 +70,12 @@ export function createEncodedOtpToken(
  * @param {number} [dateNow]
  * @returns {OtpToken|undefined} If it doesn't return anything, it means the token is invalid, and maybe the keys were compromised.
  */
-export function decodeOtpToken(encodedOtpToken: string, dateNow = Date.now()): OtpToken | undefined {
+export function decodeOtpToken(encodedOtpToken, dateNow = Date.now()) {
 
-  const otpToken: any = encodedOtpToken.split(OTP_SEPARATOR)
+  /**
+   * @type {any}
+   */
+  const otpToken = encodedOtpToken.split(OTP_SEPARATOR)
 
   otpToken[EXPIRES] = decompressNumber(otpToken[EXPIRES])
 
@@ -108,9 +117,7 @@ export function decodeOtpToken(encodedOtpToken: string, dateNow = Date.now()): O
         return
       }
       otpToken[OTP_BLOCK] = decompressNumber(otpToken[OTP_BLOCK])
-      if (otpToken[OTP_BLOCK] <= dateNow) {
-        delete otpToken[OTP_BLOCK]
-      } else if ((otpToken[OTP_BLOCK] - dateNow) > OTP_INVALID_BLOCK_MS) {
+      if ((otpToken[OTP_BLOCK] - dateNow) > OTP_INVALID_BLOCK_MS) {
         return
       }
     }
@@ -124,24 +131,16 @@ export function decodeOtpToken(encodedOtpToken: string, dateNow = Date.now()): O
 
 
 /**
- * @async
- * @function decodeOtpTokenList
- * @param {string} encodedOtpTokenListString
- * @returns {string[]}
- */
-export function decodeOtpTokenList(encodedOtpTokenListString: string): string[] {
-  return encodedOtpTokenListString.split(OTP_TOKEN_SEPARATOR)
-}
-
-
-/**
  * @function encodeOtpToken
  * @param {OtpToken} otpToken
  * @returns {string}
  */
-export function encodeOtpToken(otpToken: OtpToken) {
+export function encodeOtpToken(otpToken) {
 
-  const otpTokenCopy: any = otpToken.slice()
+  /**
+   * @type {any}
+   */
+  const otpTokenCopy = otpToken.slice()
 
   otpTokenCopy[CREDENTIAL] = encodeCredential(otpTokenCopy[CREDENTIAL])
 
@@ -174,23 +173,35 @@ export function encodeOtpToken(otpToken: OtpToken) {
  * @param {OtpToken} otpToken
  * @returns {string}
  */
-export function encodeOtpTokenData(otpToken: OtpToken): string {
+export function encodeOtpTokenData(otpToken) {
 
-  return [
-    compressNumber(msToSeconds(otpToken[EXPIRES], Math.trunc)),
-    otpToken[RESEND_BLOCK] && compressNumber(msToSeconds(otpToken[RESEND_BLOCK], Math.trunc)),
-    otpToken[OTP_BLOCK] && compressNumber(msToSeconds(otpToken[OTP_BLOCK], Math.trunc))
-  ].join(OTP_TOKEN_SEPARATOR)
+  let result = (
+    encodeCredential(otpToken[CREDENTIAL]) + OTP_SEPARATOR +
+    compressNumber(otpToken[EXPIRES])
+  )
 
-}
+  if (otpToken[OTP]) {
+    result += (
+      OTP_SEPARATOR +
+      otpToken[OTP] + OTP_SEPARATOR +
+      otpToken[ATTEMPTS]
+    )
+  }
 
+  if (otpToken[RESEND_BLOCK]) {
+    result += (
+      OTP_SEPARATOR +
+      compressNumber(otpToken[RESEND_BLOCK])
+    )
+  }
 
-/**
- * @async
- * @function encodeOtpTokenList
- * @param {any[]} encodedOtpTokenList
- * @returns {string}
- */
-export function encodeOtpTokenList(encodedOtpTokenList: any[]): string {
-  return encodedOtpTokenList.join(OTP_TOKEN_SEPARATOR)
+  if (otpToken[OTP_BLOCK]) {
+    result += (
+      OTP_SEPARATOR +
+      compressNumber(otpToken[OTP_BLOCK])
+    )
+  }
+
+  return result
+
 }

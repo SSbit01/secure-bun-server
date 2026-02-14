@@ -8,7 +8,7 @@ import { createKek, wrapKey } from "#src/lib/crypto/symmetric/kek"
 import { createDek, encryptTextSymmetrically } from "#src/lib/crypto/symmetric/dek"
 import { COOKIE_OTP } from "#src/lib/cookie"
 import { KEK_ID_BYTES, MAX_KMS_STORE_ATTEMPTS } from "#src/lib/kms"
-import { getOtpTokenList, setOtpCookie } from "#src/lib/otp"
+import { OTP_TOKEN_SEPARATOR, getOtpTokenList, setOtpCookie } from "#src/lib/otp"
 import { createOtp } from "#src/lib/otp/custom"
 
 import {
@@ -17,8 +17,7 @@ import {
   createEncodedOtpToken,
   decodeOtpToken,
   encodeOtpToken,
-  encodeOtpTokenData,
-  encodeOtpTokenList
+  encodeOtpTokenData
 } from "#src/lib/otp/encode/token"
 
 import { createOtpTokenListId, deleteOtpTokenId, updateOtpTokenExpires } from "#src/lib/otp/id"
@@ -88,7 +87,7 @@ async function generateOtpTokenListCreationResponse(cookies, credential) {
     wrappedDekString +
     await encryptTextSymmetrically(
       dek,
-      encodeOtpTokenList([createEncodedOtpToken(credential, expires, otp, resendBlock), id]),
+      createEncodedOtpToken(credential, expires, otp, resendBlock) + OTP_TOKEN_SEPARATOR + id,
       additionalData
     ),
     expiresSeconds
@@ -125,7 +124,13 @@ export default async function generateOtpCreationResponse(cookies, credential) {
     return await generateOtpTokenListCreationResponse(cookies, credential)
   }
 
-  const encodedOtpTokenList = await getOtpTokenList(dek, otpData.substring(ENVELOPE_ENCRYPTION_WRAP_LENGTH))
+  let additionalData = Uint8Array.fromBase64(kekId, BASE64URL_OPTIONS)
+
+  const encodedOtpTokenList = await getOtpTokenList(
+    dek,
+    otpData.substring(ENVELOPE_ENCRYPTION_WRAP_LENGTH),
+    additionalData
+  )
 
   if (!encodedOtpTokenList) {
     return await generateOtpTokenListCreationResponse(cookies, credential)
@@ -195,11 +200,6 @@ export default async function generateOtpCreationResponse(cookies, credential) {
    */
 
   /**
-   * @type {Uint8Array<ArrayBuffer>}
-   */
-  let additionalData
-
-  /**
    * Kek ID + Wrapped DEK.
    * 
    * @type {string}
@@ -209,7 +209,6 @@ export default async function generateOtpCreationResponse(cookies, credential) {
   const currentKekId = await kmsOtp.getCurrentId()
 
   if (currentKekId === kekId) {
-    additionalData = Uint8Array.fromBase64(kekId, BASE64URL_OPTIONS)
     envelope = otpData.substring(0, ENVELOPE_ENCRYPTION_WRAP_LENGTH)
   } else {
     /**
@@ -268,7 +267,7 @@ export default async function generateOtpCreationResponse(cookies, credential) {
     cookies,
     envelope + await encryptTextSymmetrically(
       dek,
-      encodeOtpTokenList(newEncodedOtpTokenList),
+      newEncodedOtpTokenList.join(OTP_TOKEN_SEPARATOR),
       additionalData
     ),
     msToSeconds(expires, Math.trunc)

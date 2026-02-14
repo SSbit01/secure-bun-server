@@ -1,7 +1,7 @@
 {
   "name": "secure-bun-server",
   "description": "Template with passwordless authentication via email, KMS, and a MariaDB/MySQL database configured in Bun.",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "author": "Stefan Samson <ss42701@outlook.com> (https://ssbit01.github.io/)",
   "license": "MIT",
   "repository": "github:SSbit01/secure-bun-server",
