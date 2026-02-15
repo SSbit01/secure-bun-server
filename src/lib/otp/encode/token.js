@@ -175,6 +175,10 @@ export function encodeOtpToken(otpToken) {
 
 
 /**
+ * If the result starts with a `!`, it means the token is blocked.
+ * Commas separate the values with the following structure:
+ * `[expires, resendBlock, otpBlock]`
+ * 
  * @function encodeOtpTokenData
  * @param {OtpToken} otpToken
  * @returns {string}
