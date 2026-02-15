@@ -183,7 +183,9 @@ export function encodeOtpTokenData(otpToken) {
 
   let result = compressNumber(msToSeconds(otpToken[EXPIRES], Math.trunc))
 
-  if (otpToken[RESEND_BLOCK]) {
+  if (!otpToken[ATTEMPTS]) {
+    result += "!"
+  } else if (otpToken[RESEND_BLOCK]) {
     result += "," + compressNumber(msToSeconds(otpToken[RESEND_BLOCK], Math.ceil))
     if (otpToken[OTP_BLOCK]) {
       result += "," + compressNumber(msToSeconds(otpToken[OTP_BLOCK], Math.ceil))
