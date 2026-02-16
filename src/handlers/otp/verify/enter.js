@@ -278,7 +278,7 @@ LEFT JOIN emails e2 ON ue2.email_id=e2.id
 WHERE e.email=${email}`
 
   if (emailData?.session_id) {
-    await new Session(cookies, emailData.session_id.toBase64(BASE64URL_OPTIONS)).save()
+    await new Session(cookies, emailData.session_id.toBase64()).save()
     if (emailData.is_backup) {
       emailData.email2 = emailData.email
       delete emailData.email
@@ -321,7 +321,7 @@ WHERE e.email=${email}`
   })
   
   // @ts-expect-error: `sessionId` is declared in the try block.
-  await new Session(cookies, sessionId.toBase64(BASE64URL_OPTIONS)).save()
+  await new Session(cookies, sessionId.toBase64()).save()
 
   return new Response(null, APP_RES_INIT_204)
 
