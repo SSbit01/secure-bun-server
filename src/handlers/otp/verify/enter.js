@@ -316,8 +316,8 @@ WHERE e.email=${email}`
     if (!userId) {
       throw new Error("Too many attempts to create a user.")
     }
-    emailData.id ??= (await tx`INSERT INTO emails (email) VALUES (${email})`).lastInsertRowid
-    await tx`INSERT INTO user_emails (is_backup,email_id,user_id) VALUES (FALSE,${emailData.id},${userId})`
+    const emailId = emailData?.id ?? (await tx`INSERT INTO emails (email) VALUES (${email})`).lastInsertRowid
+    await tx`INSERT INTO user_emails (is_backup,email_id,user_id) VALUES (FALSE,${emailId},${userId})`
   })
   
   // @ts-expect-error: `sessionId` is declared in the try block.
