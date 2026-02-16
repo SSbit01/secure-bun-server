@@ -278,7 +278,7 @@ LEFT JOIN emails e2 ON ue2.email_id=e2.id
 WHERE e.email=${email}`
 
   if (emailData?.session_id) {
-    await new Session(cookies, emailData.session_id.toBase64()).save()
+    await new Session(cookies, emailData.session_id.toBase64(BASE64URL_OPTIONS)).save()
     if (emailData.is_backup) {
       emailData.email2 = emailData.email
       delete emailData.email
