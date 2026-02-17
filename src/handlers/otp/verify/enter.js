@@ -273,7 +273,7 @@ export default async function handleOtpEnterVerification(req) {
 FROM emails e
 INNER JOIN user_emails ue ON e.id=ue.email_id
 INNER JOIN users u ON ue.user_id=u.id
-LEFT JOIN user_emails ue2 ON u.id=ue2.user_id AND ue2.is_backup!=ue.is_backup
+LEFT JOIN user_emails ue2 ON u.id=ue2.user_id AND ue2.is_backup=(1-ue.is_backup)
 LEFT JOIN emails e2 ON ue2.email_id=e2.id
 WHERE e.email=${email}`
 
