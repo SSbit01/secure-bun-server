@@ -238,6 +238,41 @@ u.session_id=${this.#id}`
 
   /**
    * @async
+   * @function getUserData
+   * @returns {Promise<{email:string,display_name?:string,email2?:string}|undefined>}
+   */
+  async getUserData() {
+
+    const [data] = await sql
+`SELECT
+u.display_name,ANY_VALUE(CASE WHEN ue.is_backup=FALSE THEN e.email END)
+AS email,ANY_VALUE(CASE WHEN ue.is_backup=TRUE THEN e.email END)
+AS email2
+FROM users u
+INNER JOIN user_emails ue ON u.id=ue.user_id
+INNER JOIN emails e ON ue.email_id=e.id
+WHERE u.session_id=${this.#id}
+GROUP BY u.id`
+
+    if (!data) {
+      return
+    }
+    
+    if (!data.display_name) {
+      delete data.display_name
+    }
+
+    if (!data.email2) {
+      delete data.email2
+    }
+    
+    return data
+
+  }
+
+
+  /**
+   * @async
    * @function isEmailTaken
    * @param {string} email 
    * @returns {Promise<boolean>}
