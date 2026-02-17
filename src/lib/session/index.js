@@ -77,7 +77,8 @@ export async function getSession(cookies) {
      */
     sessionInfo = (await decryptTextSymmetrically(
       dek,
-      sessionData.substring(ENVELOPE_ENCRYPTION_WRAP_LENGTH)
+      sessionData.substring(ENVELOPE_ENCRYPTION_WRAP_LENGTH),
+      Uint8Array.fromBase64(kekId, BASE64URL_OPTIONS)
     )).split(TOKEN_SEPARATOR)
   } catch {
     cookies.delete(COOKIE_SESSION)
@@ -112,7 +113,9 @@ export async function getSession(cookies) {
     const promises = [kmsSession.rotate(kekId)]
 
     if (idString) {
-      promises.push(sql`UPDATE users SET session_id=RANDOM_BYTES(18) WHERE session_id=${Uint8Array.fromBase64(idString)}`)
+      promises.push(
+        sql`UPDATE users SET session_id=RANDOM_BYTES(18) WHERE session_id=${Uint8Array.fromBase64(idString, BASE64URL_OPTIONS)}`
+      )
     }
 
     // @ts-expect-error: promises has already keyRotation
@@ -175,7 +178,7 @@ export default class Session {
     this.#dek = dek
     this.#dekRotationDate = dekRotationDate
     this.#envelope = envelope
-    this.#id = Uint8Array.fromBase64(idString)
+    this.#id = Uint8Array.fromBase64(idString, BASE64URL_OPTIONS)
     this.#idString = idString
     this.#lastFetchDate = lastFetchDate
   }

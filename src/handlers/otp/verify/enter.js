@@ -269,7 +269,7 @@ export default async function handleOtpEnterVerification(req) {
   email = currentOtpToken[CREDENTIAL]
 
   const [emailData] = await sql
-`SELECT e.id,u.display_name,e2.email,ue2.is_backup,u.session_id
+`SELECT e.id,e2.email,ue2.is_backup,u.display_name,u.session_id
 FROM emails e
 INNER JOIN user_emails ue ON e.id=ue.email_id
 INNER JOIN users u ON ue.user_id=u.id
@@ -278,7 +278,7 @@ LEFT JOIN emails e2 ON ue2.email_id=e2.id
 WHERE e.email=${email}`
 
   if (emailData?.session_id) {
-    await new Session(cookies, emailData.session_id.toBase64()).save()
+    await new Session(cookies, emailData.session_id.toBase64(BASE64URL_OPTIONS)).save()
     if (emailData.is_backup) {
       emailData.email2 = emailData.email
       delete emailData.email
@@ -321,7 +321,7 @@ WHERE e.email=${email}`
   })
   
   // @ts-expect-error: `sessionId` is declared in the try block.
-  await new Session(cookies, sessionId.toBase64()).save()
+  await new Session(cookies, sessionId.toBase64(BASE64URL_OPTIONS)).save()
 
   return new Response(null, APP_RES_INIT_204)
 
