@@ -1,0 +1,23 @@
+# COMPOSE FILE FOR DEVELOPMENT
+# It creates: mariadb
+
+services:
+  mariadb:
+    image: docker.io/mariadb
+    container_name: mariadb-dev-secure-bun-server
+    environment:
+      MYSQL_DATABASE: secure-bun-server
+      MYSQL_ALLOW_EMPTY_PASSWORD: "true"
+    ports:
+      - "3306:3306"
+    volumes:
+      - mariadb-data-dev-secure-bun-server:/var/lib/mysql
+    healthcheck:
+      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+volumes:
+  mariadb-data-dev-secure-bun-server:
