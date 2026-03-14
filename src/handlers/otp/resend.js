@@ -1,4 +1,4 @@
-import { canonicalize } from "canonical-email"
+import normalizeEmail from "validator/es/lib/normalizeEmail"
 import { isValid as isEmailValid } from "mailchecker"
 
 import { BASE64URL_OPTIONS } from "#src/lib/base64"
@@ -95,7 +95,7 @@ export default async function handleOtpResending(req) {
   let email = (await req.text()).trim()
 
   if (email && isEmailValid(email)) {
-    email = canonicalize(email)
+    email = normalizeEmail(email) || ""
   } else {
     currentOtpToken = decodeOtpToken(encodedOtpTokenList.pop() || "")
     if (!currentOtpToken) {

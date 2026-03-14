@@ -1,4 +1,4 @@
-import { canonicalize } from "canonical-email"
+import normalizeEmail from "validator/es/lib/normalizeEmail"
 import { isValid as isEmailValid } from "mailchecker"
 
 import generateOtpCreationResponse from "#src/lib/otp/response/create"
@@ -14,9 +14,18 @@ import { getSession } from "#src/lib/session"
  */
 export default async function handleOtpUpdateCreation(req) {
 
-  const email = (await req.text()).trim()
+  /**
+   * @type {ReturnType<normalizeEmail>}
+   */
+  let email = (await req.text()).trim()
 
   if (!isEmailValid(email)) {
+    return new Response(null, APP_RES_INIT_DEFAULT_BAD)
+  }
+
+  email = normalizeEmail(email)
+
+  if (!email) {
     return new Response(null, APP_RES_INIT_DEFAULT_BAD)
   }
 
@@ -26,7 +35,7 @@ export default async function handleOtpUpdateCreation(req) {
     return new Response(null, APP_RES_INIT_DEFAULT_BAD)
   }
 
-  const res = await generateOtpCreationResponse(req.cookies, canonicalize(email))
+  const res = await generateOtpCreationResponse(req.cookies, email)
 
   if (res.ok) {
     await session.save()

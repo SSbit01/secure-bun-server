@@ -29,7 +29,7 @@ in addition to being quantum-resistant.
 ### Email address validation
 
 Validates email addresses using the [mailchecker](https://www.npmjs.com/package/mailchecker) package and
-normalizes them with the [canonical-email](https://www.npmjs.com/package/canonical-email) package,
+normalizes them with the [validator](https://www.npmjs.com/package/validator) package,
 removing any +alias and domain aliases.
 
 ### State Aware
