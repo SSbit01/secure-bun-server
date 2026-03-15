@@ -134,7 +134,7 @@ export default async function handleOtpResending(req) {
   if (
     !currentOtpToken ||
     dateNow >= currentOtpToken[EXPIRES] ||
-    (currentOtpToken[RESEND_BLOCK] && dateNow >= currentOtpToken[RESEND_BLOCK])
+    (currentOtpToken[RESEND_BLOCK] && dateNow < currentOtpToken[RESEND_BLOCK])
   ) {
     return new Response(null, APP_RES_INIT_DEFAULT_BAD)
   }
