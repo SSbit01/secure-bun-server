@@ -198,23 +198,7 @@ export default class Session {
    * @returns {Promise<boolean>}
    */
   async deleteAccount() {
-
-    const emails = await sql
-    `SELECT ue.email_id FROM users u INNER JOIN user_emails ue ON u.id=ue.user_id WHERE u.session_id=${this.#id}`
-
-    if (!emails.length) {
-      return false
-    }
-
-    await sql.begin(async tx => {
-      await Promise.all([
-        tx`DELETE FROM users WHERE session_id=${this.#id}`,
-        tx`DELETE FROM emails WHERE id IN (${tx(emails, "email_id")})`
-      ])
-    })
-
-    return true
-
+    return Boolean((await sql`DELETE FROM users WHERE session_id=${this.#id}`).affectedRows)
   }
 
 
