@@ -367,9 +367,18 @@ WHERE session_id=${this.#id}`
    * @returns {Promise<boolean>}
    */
   async swapEmails() {
+    /**
+     * Checks if backup email is set too.
+     */
+
     return Boolean((
       await sql
-      `UPDATE user_emails ue INNER JOIN users u ON u.id=ue.user_id SET ue.is_backup=!ue.is_backup WHERE u.session_id=${this.#id}`
+`UPDATE user_emails ue
+INNER JOIN users u ON u.id=ue.user_id
+SET ue.is_backup=!ue.is_backup
+WHERE
+u.session_id=${this.#id} AND
+EXISTS(SELECT 1 FROM user_emails ue2 WHERE ue2.user_id=u.id AND ue2.is_backup=TRUE)`
     ).affectedRows)
   }
 
