@@ -399,25 +399,47 @@ WHERE session_id=${this.#id}`
    */
   async updateEmail(newEmail, backup = false) {
 
-    if ((await sql
-`UPDATE emails e
-INNER JOIN user_emails ue ON e.id=ue.email_id
-INNER JOIN users u ON ue.user_id=u.id
-SET e.email=${newEmail}
-WHERE ue.is_backup=${backup} AND u.session_id=${this.#id}`
-    ).affectedRows) {
-      return true
+    /**
+     * Old email address will be deleted by the `delete_expired_rows` scheduler, see `setup.sql`.
+     */
+
+    const [data] = await sql
+`SELECT id,(SELECT id FROM emails WHERE email=${newEmail}) AS email_id
+FROM users
+WHERE session_id=${this.#id}`
+
+    if (!data) {
+      return false
     }
 
+    if (data.email_id) {
+      /**
+       * MariaDB ignores `INSERT IGNORE` when `ON DUPLICATE KEY UPDATE` is present.
+       * That is the reason a try block is used here.
+       * 
+       * @see https://mariadb.com/docs/server/reference/sql-statements/data-manipulation/inserting-loading-data/insert-ignore
+       */
+      try {
+        return Boolean((await sql
+`INSERT INTO user_emails (email_id,user_id,is_backup) VALUES
+(${data.email_id},${data.id},${backup})
+ON DUPLICATE KEY UPDATE email_id=${data.email_id}`
+        ).affectedRows)
+      } catch {}
+    }
+
+    /**
+     * @type {boolean}
+     */
     let result = false
 
     await sql.begin(async tx => {
-      const emailId = (await tx`INSERT INTO emails (email) VALUES (${newEmail})`).lastInsertRowid
+      data.email_id = (await tx`INSERT INTO emails (email) VALUES (${newEmail})`).lastInsertRowid
+
       result = Boolean((await tx
 `INSERT INTO user_emails (email_id,user_id,is_backup) VALUES
-(${emailId},${this.#id},${backup})
-ON DUPLICATE KEY UPDATE email_id=${emailId}`
-      ).affectedRows)
+(${data.email_id},${data.id},${backup})
+ON DUPLICATE KEY UPDATE email_id=${data.email_id}`).affectedRows)
     })
 
     return result
