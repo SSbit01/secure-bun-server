@@ -281,7 +281,7 @@ GROUP BY u.id`
 
     const [result] = await sql
 `SELECT
-EXISTS(SELECT 1 FROM emails e LEFT JOIN user_emails ue ON e.id=ue.email_id WHERE e.email=${email} AND ue.user_id IS NOT NULL) AS r
+EXISTS(SELECT 1 FROM emails e LEFT JOIN user_emails ue ON e.id=ue.email_id WHERE ue.user_id IS NOT NULL AND e.email=${email}) AS r
 FROM users
 WHERE session_id=${this.#id}`
 
