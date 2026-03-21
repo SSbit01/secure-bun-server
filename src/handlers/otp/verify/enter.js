@@ -270,33 +270,30 @@ export default async function handleOtpEnterVerification(req) {
 
   email = currentOtpToken[CREDENTIAL]
 
-  const [emailData] = await sql
-`SELECT e.id,e2.email,ue2.is_backup,u.display_name,u.session_id
+  const [user] = await sql
+`SELECT e.id AS email_id,e2.email AS other_email,ue2.is_backup AS is_other_email_backup,u.display_name,u.session_id
 FROM emails e
-INNER JOIN user_emails ue ON e.id=ue.email_id
-INNER JOIN users u ON ue.user_id=u.id
+LEFT JOIN user_emails ue ON e.id=ue.email_id
+LEFT JOIN users u ON ue.user_id=u.id
 LEFT JOIN user_emails ue2 ON u.id=ue2.user_id AND ue2.is_backup=(1-ue.is_backup)
 LEFT JOIN emails e2 ON ue2.email_id=e2.id
 WHERE e.email=${email}`
 
-  if (emailData?.session_id) {
-    await new Session(cookies, emailData.session_id.toBase64(BASE64URL_OPTIONS)).save()
-    if (emailData.is_backup) {
-      emailData.email2 = emailData.email
-      delete emailData.email
-    } else if (!emailData.email) {
-      delete emailData.email
+  if (user?.session_id) {
+    await new Session(cookies, user.session_id.toBase64(BASE64URL_OPTIONS)).save()
+    if (user.is_other_email_backup) {
+      user.email2 = user.other_email
+    } else if (user.other_email) {
+      user.email = user.other_email
     }
-    if (!emailData.display_name) {
-      delete emailData.display_name
+    if (!user.display_name) {
+      delete user.display_name
     }
-    /**
-     * Delete `email.id`, `is_backup` and `session_id` from the response body.
-     */
-    delete emailData.id
-    delete emailData.is_backup
-    delete emailData.session_id
-    return Response.json(emailData, APP_RES_INIT_200)
+    delete user.email_id
+    delete user.other_email
+    delete user.is_other_email_backup
+    delete user.session_id
+    return Response.json(user, APP_RES_INIT_200)
   }
 
   /**
@@ -318,7 +315,7 @@ WHERE e.email=${email}`
     if (!userId) {
       throw new Error("Too many attempts to create a user.")
     }
-    const emailId = emailData?.id ?? (await tx`INSERT INTO emails (email) VALUES (${email})`).lastInsertRowid
+    const emailId = user?.email_id ?? (await tx`INSERT INTO emails (email) VALUES (${email})`).lastInsertRowid
     await tx`INSERT INTO user_emails (is_backup,email_id,user_id) VALUES (FALSE,${emailId},${userId})`
   })
   
