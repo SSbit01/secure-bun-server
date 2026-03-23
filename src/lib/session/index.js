@@ -198,7 +198,7 @@ export default class Session {
    * @returns {Promise<boolean>}
    */
   async deleteAccount() {
-    return Boolean((await sql`DELETE FROM users WHERE session_id=${this.#id}`).affectedRows)
+    return (await sql`DELETE FROM users WHERE session_id=${this.#id}`).affectedRows > 0
   }
 
 
@@ -208,7 +208,7 @@ export default class Session {
    * @returns {Promise<boolean>}
    */
   async deleteEmailBackup() {
-    return Boolean((
+    return (
       await sql
 `DELETE e,ue FROM emails e
 INNER JOIN user_emails ue ON e.id=ue.email_id
@@ -216,7 +216,7 @@ INNER JOIN users u ON ue.user_id=u.id
 WHERE
 ue.is_backup=1 AND
 u.session_id=${this.#id}`
-    ).affectedRows)
+    ).affectedRows > 0
   }
 
 
@@ -285,7 +285,7 @@ WHERE session_id=${this.#id}`
    * @returns {Promise<boolean>}
    */
   async isValid() {
-    return Boolean((await sql`SELECT 1 FROM users WHERE session_id=${this.#id}`).length)
+    return (await sql`SELECT 1 FROM users WHERE session_id=${this.#id}`).length > 0
   }
 
 
@@ -355,7 +355,7 @@ WHERE session_id=${this.#id}`
      * Checks if backup email is set too.
      */
 
-    return Boolean((
+    return (
       await sql
 `UPDATE user_emails ue
 INNER JOIN users u ON u.id=ue.user_id
@@ -363,7 +363,7 @@ SET ue.is_backup=!ue.is_backup
 WHERE
 u.session_id=${this.#id} AND
 EXISTS(SELECT 1 FROM user_emails ue2 WHERE ue2.user_id=u.id AND ue2.is_backup=TRUE)`
-    ).affectedRows)
+    ).affectedRows > 0
   }
 
 
@@ -374,9 +374,9 @@ EXISTS(SELECT 1 FROM user_emails ue2 WHERE ue2.user_id=u.id AND ue2.is_backup=TR
    * @returns {Promise<boolean>}
    */
   async updateDisplayName(newDisplayName) {
-    return Boolean((
+    return (
       await sql`UPDATE users SET display_name=${newDisplayName} WHERE session_id=${this.#id}`
-    ).affectedRows)
+    ).affectedRows > 0
   }
 
 
@@ -413,11 +413,11 @@ WHERE session_id=${this.#id}`
        * @see https://mariadb.com/docs/server/reference/sql-statements/data-manipulation/inserting-loading-data/insert-ignore
        */
       try {
-        return Boolean((await sql
+        return (await sql
 `INSERT INTO user_emails (email_id,user_id,is_backup) VALUES
 (${data.email_id},${data.id},${backup})
 ON DUPLICATE KEY UPDATE email_id=${data.email_id}`
-        ).affectedRows)
+        ).affectedRows > 0
       } catch {}
     }
 
@@ -429,10 +429,10 @@ ON DUPLICATE KEY UPDATE email_id=${data.email_id}`
     await sql.begin(async tx => {
       data.email_id = (await tx`INSERT INTO emails (email) VALUES (${newEmail})`).lastInsertRowid
 
-      result = Boolean((await tx
+      result = (await tx
 `INSERT INTO user_emails (email_id,user_id,is_backup) VALUES
 (${data.email_id},${data.id},${backup})
-ON DUPLICATE KEY UPDATE email_id=${data.email_id}`).affectedRows)
+ON DUPLICATE KEY UPDATE email_id=${data.email_id}`).affectedRows > 0
     })
 
     return result
@@ -472,9 +472,9 @@ ON DUPLICATE KEY UPDATE email_id=${data.email_id}`).affectedRows)
    */
   async updateSessionIdFast() {
 
-    return Boolean((
+    return (
       await sql`UPDATE users SET session_id=RANDOM_BYTES(18) WHERE session_id=${this.#id}`
-    ).affectedRows)
+    ).affectedRows > 0
 
   }
 
