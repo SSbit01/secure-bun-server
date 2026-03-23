@@ -376,7 +376,7 @@ EXISTS(SELECT 1 FROM user_emails ue2 WHERE ue2.user_id=u.id AND ue2.is_backup=TR
   async updateDisplayName(newDisplayName) {
     const userId = await this.getUserId()
 
-    if (!userId) {
+    if (userId == undefined) {
       return false
     }
 
