@@ -257,6 +257,16 @@ GROUP BY u.id`
 
   /**
    * @async
+   * @function getUserId
+   * @returns {Promise<bigint|number|undefined>}
+   */
+  async getUserId() {
+    return (await sql`SELECT id FROM users WHERE session_id=${this.#id}`)[0]?.id
+  }
+
+
+  /**
+   * @async
    * @function isEmailTaken
    * @param {string} email 
    * @returns {Promise<boolean>}
@@ -276,16 +286,6 @@ WHERE session_id=${this.#id}`
 
     return Boolean(result?.r)
 
-  }
-
-
-  /**
-   * @async
-   * @function isValid
-   * @returns {Promise<boolean>}
-   */
-  async isValid() {
-    return (await sql`SELECT 1 FROM users WHERE session_id=${this.#id}`).length > 0
   }
 
 
@@ -374,9 +374,15 @@ EXISTS(SELECT 1 FROM user_emails ue2 WHERE ue2.user_id=u.id AND ue2.is_backup=TR
    * @returns {Promise<boolean>}
    */
   async updateDisplayName(newDisplayName) {
-    return (
-      await sql`UPDATE users SET display_name=${newDisplayName} WHERE session_id=${this.#id}`
-    ).affectedRows > 0
+    const userId = await this.getUserId()
+
+    if (!userId) {
+      return false
+    }
+
+    await sql`UPDATE users SET display_name=${newDisplayName} WHERE id=${userId}`
+
+    return true
   }
 
 
