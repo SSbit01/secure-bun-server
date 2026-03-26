@@ -17,7 +17,7 @@ import handleUserAllSessionsLogout from "#src/handlers/user/logout/all"
 
 const ROUTES = Object.freeze({
 
-  "/s/health": { GET: new Response("OK") },
+  "/s/health": new Response("OK"),
 
   "/s/otp": { POST: handleOtpEnterCreation },
   "/s/otp/verify": { POST: handleOtpEnterVerification },
