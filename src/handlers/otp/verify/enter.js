@@ -260,11 +260,11 @@ export default async function handleOtpEnterVerification(req) {
    * VERIFIED
    */
 
-  const otpTokenIdDeletion = await deleteOtpTokenId(id, expires)
+  const otpTokenIdDeleteResult = await deleteOtpTokenId(id, expires)
 
   cookies.delete(COOKIE_OTP)
 
-  if (!otpTokenIdDeletion) {
+  if (!otpTokenIdDeleteResult) {
     return new Response(null, APP_RES_INIT_DEFAULT_BAD)
   }
 

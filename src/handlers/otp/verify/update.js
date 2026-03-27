@@ -253,12 +253,12 @@ export default async function handleOtpUpdateVerification(req) {
    * VERIFIED
    */
 
-  const otpTokenIdDeletion = await deleteOtpTokenId(id, expires)
+  const otpTokenIdDeleteResult = await deleteOtpTokenId(id, expires)
 
   cookies.delete(COOKIE_OTP)
 
   if (
-    !otpTokenIdDeletion ||
+    !otpTokenIdDeleteResult ||
     !await session.updateEmail(currentOtpToken[CREDENTIAL], new URL(req.url).searchParams.get("b") === "1")
   ) {
     return new Response(null, APP_RES_INIT_DEFAULT_BAD)

@@ -8,7 +8,7 @@ import { getSession } from "#src/lib/session"
  * @param {Bun.BunRequest} req
  * @returns {Promise<Response>}
  */
-export default async function handleUserDeletion(req) {
+export default async function handleUserDelete(req) {
 
   const session = await getSession(req.cookies)
 
