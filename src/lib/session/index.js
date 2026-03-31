@@ -447,29 +447,6 @@ ON DUPLICATE KEY UPDATE email_id=${data.email_id}`).affectedRows > 0
 
 
   /**
-   * This function also updates the internal `id` state, so the session can be saved.
-   * 
-   * @async
-   * @function updateSessionId
-   * @returns {Promise<boolean>}
-   */
-  async updateSessionId() {
-
-    const newSessionId = createId()
-
-    if (!(await sql`UPDATE users SET session_id=${newSessionId} WHERE session_id=${this.#id}`).affectedRows) {
-      return false
-    }
-
-    this.#id = newSessionId
-    this.#idString = newSessionId.toBase64(BASE64URL_OPTIONS)
-
-    return true
-
-  }
-
-
-  /**
    * This function (unlike `updateSessionId`) doesn't update the internal `id` state, so the session cannot be reused.
    * 
    * @async

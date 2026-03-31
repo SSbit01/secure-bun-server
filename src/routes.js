@@ -6,7 +6,6 @@ import handleOtpResending from "#src/handlers/otp/resend"
 import handleUserDelete from "#src/handlers/user/delete"
 import handleUserDisplayNameUpdate from "#src/handlers/user/name"
 import handleUserLogout from "#src/handlers/user/logout"
-import handleUserOtherSessionsLogout from "#src/handlers/user/logout/other"
 import handleUserAllSessionsLogout from "#src/handlers/user/logout/all"
 
 
@@ -30,7 +29,6 @@ const ROUTES = Object.freeze({
   "/s/user/delete": { POST: handleUserDelete },
   "/s/user/name": { POST: handleUserDisplayNameUpdate },
   "/s/user/logout": { POST: handleUserLogout },
-  "/s/user/logout/other": { POST: handleUserOtherSessionsLogout },
   "/s/user/logout/all": { POST: handleUserAllSessionsLogout }
 
 })
