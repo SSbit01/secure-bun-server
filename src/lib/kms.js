@@ -71,6 +71,9 @@ class KMS {
 
   #name
 
+  /**
+   * Remember that looping Maps and deleting the current entry is safe in JavaScript.
+   */
   #storage
 
 
