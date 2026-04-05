@@ -261,15 +261,16 @@ class KMS {
     // Manually clean up expired keys, as this implementation cannot automatically delete them.
     
     const dateNow = Date.now()
+
+    // New keys should not have the same ID as existing ones (including expired ones).
+    if (this.#storage.has(keyId)) {
+      return false
+    }
   
     for (const [currentKeyId, [currentExpires]] of this.#storage) {
       if (currentExpires <= dateNow) {
         this.#storage.delete(currentKeyId)
       }
-    }
-
-    if (this.#storage.has(keyId)) {
-      return false
     }
   
     const rotate = dateNow + ROTATE_TIME
