@@ -46,25 +46,43 @@ export const MAX_KMS_STORE_ATTEMPTS = 3
 
 
 
-export default class KMS {
+/**
+ * @async
+ * @function
+ * @param {number} ageMsAfterRotation - In milliseconds.
+ * @param {string} name - Give it a name. Useful when displaying warnings.
+ * @returns {Promise<KMS>}
+ */
+export default async function getKms(ageMsAfterRotation, name) {
+
+  /**
+   * Implement external key retrieval here and pass them in the `Map` storage.
+   */
+
+  return new KMS(ageMsAfterRotation, name, new Map())
+
+}
+
+
+
+class KMS {
 
   #ageMsAfterRotation
 
   #name
 
-  /**
-   * @type {Map<string,KeyData>}
-   */
-  #storage = new Map()
+  #storage
 
 
   /**
-   * @param {number} [ageMsAfterRotation] - In milliseconds.
-   * @param {string} [name] - Give it a name. Useful when displaying warnings.
+   * @param {number} ageMsAfterRotation - In milliseconds.
+   * @param {string} name - Give it a name. Useful when displaying warnings.
+   * @param {Map<string,KeyData>} storage
    */
-  constructor(ageMsAfterRotation = SESSION_MAX_AGE_MS, name) {
+  constructor(ageMsAfterRotation, name, storage) {
     this.#ageMsAfterRotation = ageMsAfterRotation
     this.#name = name
+    this.#storage = storage
   }
 
 

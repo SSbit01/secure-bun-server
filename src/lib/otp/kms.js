@@ -1,8 +1,6 @@
 import { OTP_MAX_AGE_MS } from "#src/lib/computed"
-import KMS from "#src/lib/kms"
+import getKms from "#src/lib/kms"
 
-
-const kmsOtp = new KMS(OTP_MAX_AGE_MS, "OTP")
-
+const kmsOtp = await getKms(OTP_MAX_AGE_MS, "OTP")
 
 export default kmsOtp

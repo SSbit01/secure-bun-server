@@ -9,7 +9,6 @@ console.log("Building...")
 await Promise.all([
   generateLicenseFile("./package.json", output + "/LICENSES.txt", generateLicenseFileConfig),
   Bun.build({
-    bytecode: true,
     define: {
       "process.env.NODE_ENV": '"production"'
     },

@@ -17,6 +17,7 @@ await Promise.all([
       "process.env.NODE_ENV": '"production"'
     },
     entrypoints: ["./src/index.js"],
+    format: "esm",
     minify: true,
     outdir: output,
     target: "bun"

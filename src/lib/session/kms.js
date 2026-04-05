@@ -1,8 +1,6 @@
 import { SESSION_MAX_AGE_MS } from "#src/lib/computed"
-import KMS from "#src/lib/kms"
+import getKms from "#src/lib/kms"
 
-
-const kmsSession = new KMS(SESSION_MAX_AGE_MS, "SESSION")
-
+const kmsSession = await getKms(SESSION_MAX_AGE_MS, "SESSION")
 
 export default kmsSession
