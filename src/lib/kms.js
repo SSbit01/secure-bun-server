@@ -95,15 +95,16 @@ class KMS {
    */
   async getCurrentId() {
   
-    // Manually clean up expired keys, as this implementation cannot automatically delete them.
-  
     /**
      * @type {([string,KeyData]|undefined)}
      */
     let currentKeyEntry
   
     const dateNow = Date.now()
-  
+    
+    /**
+     * Manually clean up expired keys, as this implementation cannot automatically delete them.
+     */
     for (const keyEntry of this.#storage) {
       const expires = keyEntry[1][EXPIRES]
       if (expires <= dateNow) {
@@ -258,15 +259,18 @@ class KMS {
    */
   async store(keyId, key) {
   
-    // Manually clean up expired keys, as this implementation cannot automatically delete them.
-    
     const dateNow = Date.now()
-
-    // New keys should not have the same ID as existing ones (including expired ones).
+    
+    /**
+     * New keys should not have the same ID as existing ones (including expired ones).
+     */
     if (this.#storage.has(keyId)) {
       return false
     }
-  
+
+    /**
+     * Manually clean up expired keys, as this implementation cannot automatically delete them.
+     */
     for (const [currentKeyId, [currentExpires]] of this.#storage) {
       if (currentExpires <= dateNow) {
         this.#storage.delete(currentKeyId)
