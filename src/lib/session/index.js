@@ -374,15 +374,19 @@ EXISTS(SELECT 1 FROM user_emails ue2 WHERE ue2.user_id=u.id AND ue2.is_backup=TR
    * @returns {Promise<boolean>}
    */
   async updateDisplayName(newDisplayName) {
-    const userId = await this.getUserId()
+    
+    const [user] = await sql`SELECT id,display_name FROM users WHERE session_id=${this.#id}`
 
-    if (userId == undefined) {
+    if (!user) {
       return false
     }
 
-    await sql`UPDATE users SET display_name=${newDisplayName} WHERE id=${userId}`
+    if (user.display_name !== newDisplayName) {
+      await sql`UPDATE users SET display_name=${newDisplayName} WHERE id=${!user.id}`
+    }
 
     return true
+
   }
 
 
