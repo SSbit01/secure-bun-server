@@ -25,11 +25,11 @@ CREATE TABLE IF NOT EXISTS emails (
 );
 
 CREATE TABLE IF NOT EXISTS user_emails (
+  email_id BIGINT UNSIGNED PRIMARY KEY,
   is_backup BOOLEAN NOT NULL DEFAULT FALSE,
-  email_id BIGINT UNSIGNED UNIQUE NOT NULL,
   user_id BIGINT UNSIGNED NOT NULL,
   updated_at DATETIME ON UPDATE CURRENT_TIMESTAMP,
-  CONSTRAINT pk_user_emails PRIMARY KEY (is_backup, user_id),
+  CONSTRAINT uk_user_emails_is_backup_user_id UNIQUE (user_id, is_backup),
   CONSTRAINT fk_user_emails_emails FOREIGN KEY (email_id) REFERENCES emails(id) ON DELETE CASCADE,
   CONSTRAINT fk_user_emails_users FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
