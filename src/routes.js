@@ -27,7 +27,7 @@ const ROUTES = Object.freeze({
   "/s/otp/resend": { POST: handleOtpResending },
 
   "/s/user/delete": { POST: handleUserDelete },
-  "/s/user/name": { POST: handleUserDisplayNameUpdate },
+  "/s/user/display": { POST: handleUserDisplayNameUpdate },
   "/s/user/logout": { POST: handleUserLogout },
   "/s/user/logout/all": { POST: handleUserAllSessionsLogout }
 
