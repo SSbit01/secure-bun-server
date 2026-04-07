@@ -29,7 +29,7 @@ CREATE TABLE IF NOT EXISTS user_emails (
   is_backup BOOLEAN NOT NULL DEFAULT FALSE,
   user_id BIGINT UNSIGNED NOT NULL,
   updated_at DATETIME ON UPDATE CURRENT_TIMESTAMP,
-  CONSTRAINT uk_user_emails_is_backup_user_id UNIQUE (user_id, is_backup),
+  CONSTRAINT uk_user_emails_user_id_is_backup UNIQUE (user_id, is_backup),
   CONSTRAINT fk_user_emails_emails FOREIGN KEY (email_id) REFERENCES emails(id) ON DELETE CASCADE,
   CONSTRAINT fk_user_emails_users FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
