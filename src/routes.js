@@ -1,10 +1,10 @@
 import handleOtpEnterCreation from "#src/handlers/otp/create/enter"
 import handleOtpUpdateCreation from "#src/handlers/otp/create/update"
+import handleOtpResending from "#src/handlers/otp/resend"
 import handleOtpEnterVerification from "#src/handlers/otp/verify/enter"
 import handleOtpUpdateVerification from "#src/handlers/otp/verify/update"
-import handleOtpResending from "#src/handlers/otp/resend"
 import handleUserDelete from "#src/handlers/user/delete"
-import handleUserDisplayNameUpdate from "#src/handlers/user/name"
+import handleUserDisplayNameUpdate from "#src/handlers/user/display"
 import handleUserLogout from "#src/handlers/user/logout"
 import handleUserAllSessionsLogout from "#src/handlers/user/logout/all"
 
