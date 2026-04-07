@@ -413,18 +413,10 @@ WHERE u.session_id=${this.#id}`
     }
 
     if (data.email_id) {
-      /**
-       * MariaDB ignores `INSERT IGNORE` when `ON DUPLICATE KEY UPDATE` is present.
-       * That is the reason a try block is used here.
-       * 
-       * @see https://mariadb.com/docs/server/reference/sql-statements/data-manipulation/inserting-loading-data/insert-ignore
-       */
-      try {
-        return (await sql
+      return (await sql
 `INSERT INTO user_emails (email_id,user_id,is_backup) VALUES
 (${data.email_id},${data.id},${backup})
 ON DUPLICATE KEY UPDATE email_id=${data.email_id}`).affectedRows > 0
-      } catch {}
     }
 
     /**
