@@ -355,15 +355,15 @@ WHERE session_id=${this.#id}`
      * Checks if backup email is set too.
      */
 
-    return (
-      await sql
+    const { affectedRows } = await sql
 `UPDATE user_emails ue
 INNER JOIN users u ON u.id=ue.user_id
 SET ue.is_backup=!ue.is_backup
 WHERE
 u.session_id=${this.#id} AND
 EXISTS(SELECT 1 FROM user_emails ue2 WHERE ue2.user_id=u.id AND ue2.is_backup=TRUE)`
-    ).affectedRows > 0
+
+    return affectedRows > 0
   }
 
 
