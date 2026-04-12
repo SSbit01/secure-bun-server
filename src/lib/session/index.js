@@ -409,7 +409,7 @@ EXISTS(SELECT 1 FROM user_emails ue2 WHERE ue2.user_id=u.id AND ue2.is_backup=TR
     const [data] = await sql
 `SELECT u.id,e.id AS email_id
 FROM users u
-LEFT JOIN email e ON e.email=${newEmail}
+LEFT JOIN emails e ON e.email=${newEmail}
 WHERE u.session_id=${this.#id}`
 
     if (!data) {
