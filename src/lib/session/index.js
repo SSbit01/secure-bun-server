@@ -417,10 +417,12 @@ WHERE u.session_id=${this.#id}`
     }
 
     if (data.email_id) {
-      return (await sql
+      await sql
 `INSERT INTO user_emails (email_id,user_id,is_backup) VALUES
 (${data.email_id},${data.id},${backup})
-ON DUPLICATE KEY UPDATE email_id=${data.email_id}`).affectedRows > 0
+ON DUPLICATE KEY UPDATE email_id=${data.email_id}`
+
+      return true
     }
 
     /**
