@@ -6,6 +6,7 @@ SET GLOBAL time_zone = '+00:00';
 
 CREATE TABLE IF NOT EXISTS users (
   id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  public_id BINARY(18) UNIQUE NOT NULL DEFAULT RANDOM_BYTES(18),
   /**
    * If `NULL`, the user is set to be deleted.
    */
