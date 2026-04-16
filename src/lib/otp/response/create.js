@@ -6,7 +6,7 @@ import { ENVELOPE_ENCRYPTION_WRAP_LENGTH, KEK_ID_LENGTH, OTP_RESEND_BLOCK_MS} fr
 import { createId } from "#src/lib/crypto/id"
 import { createKek, wrapKey } from "#src/lib/crypto/symmetric/kek"
 import { createDek, encryptTextSymmetrically } from "#src/lib/crypto/symmetric/dek"
-import { COOKIE_OTP } from "#src/lib/cookie"
+import { COOKIE_NAME_OTP } from "#src/lib/cookie"
 import { KEK_ID_BYTES, MAX_KMS_STORE_ATTEMPTS } from "#src/lib/kms"
 import { OTP_TOKEN_SEPARATOR, getOtpTokenList, setOtpCookie } from "#src/lib/otp"
 import { createOtp } from "#src/lib/otp/custom"
@@ -110,7 +110,7 @@ async function createOtpTokenListCreationResponse(cookies, credential) {
  */
 export default async function generateOtpCreationResponse(cookies, credential) {
 
-  const otpData = cookies.get(COOKIE_OTP)?.trim()
+  const otpData = cookies.get(COOKIE_NAME_OTP)?.trim()
 
   if (!otpData) {
     return await createOtpTokenListCreationResponse(cookies, credential)
@@ -139,13 +139,13 @@ export default async function generateOtpCreationResponse(cookies, credential) {
   const id = encodedOtpTokenList.pop()
 
   if (!id) {
-    cookies.delete(COOKIE_OTP)
+    cookies.delete(COOKIE_NAME_OTP)
     await kmsOtp.rotate(kekId)
     return new Response(null, APP_RES_INIT_DEFAULT_BAD)
   }
 
   if (!encodedOtpTokenList.length || encodedOtpTokenList.length > otpAttributes.maxCredentials) {
-    cookies.delete(COOKIE_OTP)
+    cookies.delete(COOKIE_NAME_OTP)
     await Promise.allSettled([deleteOtpTokenId(id), kmsOtp.rotate(kekId)])
     return new Response(null, APP_RES_INIT_DEFAULT_BAD)
   }
@@ -167,7 +167,7 @@ export default async function generateOtpCreationResponse(cookies, credential) {
   for (let encodedOtpToken of encodedOtpTokenList) {
     const otpToken = decodeOtpToken(encodedOtpToken)
     if (!otpToken) {
-      cookies.delete(COOKIE_OTP)
+      cookies.delete(COOKIE_NAME_OTP)
       await Promise.allSettled([deleteOtpTokenId(id), kmsOtp.rotate(kekId)])
       return new Response(null, APP_RES_INIT_DEFAULT_BAD)
     }
@@ -244,7 +244,7 @@ export default async function generateOtpCreationResponse(cookies, credential) {
      */
     expires = await updateOtpTokenExpires(id, expires)
     if (!expires) {
-      cookies.delete(COOKIE_OTP)
+      cookies.delete(COOKIE_NAME_OTP)
       return new Response(null, APP_RES_INIT_DEFAULT_BAD)
     }
     const otp = createOtp()

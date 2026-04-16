@@ -13,7 +13,7 @@ import {
 import { createId } from "#src/lib/crypto/id"
 import { createDek, encryptTextSymmetrically } from "#src/lib/crypto/symmetric/dek"
 import { createKek, wrapKey } from "#src/lib/crypto/symmetric/kek"
-import { COOKIE_OTP } from "#src/lib/cookie"
+import { COOKIE_NAME_OTP } from "#src/lib/cookie"
 import { KEK_ID_BYTES, MAX_KMS_STORE_ATTEMPTS } from "#src/lib/kms"
 import sql from "#src/lib/sql"
 import { OTP_TOKEN_SEPARATOR, blockOtpToken, getOtpTokenList, isOtpValid, setOtpCookie } from "#src/lib/otp"
@@ -70,7 +70,7 @@ export default async function handleOtpEnterVerification(req) {
 
   const { cookies } = req
 
-  const otpData = cookies.get(COOKIE_OTP)?.trim()?.trim()
+  const otpData = cookies.get(COOKIE_NAME_OTP)?.trim()?.trim()
   
   if (!otpData) {
     return new Response(null, APP_RES_INIT_DEFAULT_BAD)
@@ -81,7 +81,7 @@ export default async function handleOtpEnterVerification(req) {
   let dek = await kmsOtp.getDek(kekId, otpData.substring(KEK_ID_LENGTH, ENVELOPE_ENCRYPTION_WRAP_LENGTH))
 
   if (!dek) {
-    cookies.delete(COOKIE_OTP)
+    cookies.delete(COOKIE_NAME_OTP)
     return new Response(null, APP_RES_INIT_DEFAULT_BAD)
   }
 
@@ -94,20 +94,20 @@ export default async function handleOtpEnterVerification(req) {
   )
 
   if (!encodedOtpTokenList) {
-    cookies.delete(COOKIE_OTP)
+    cookies.delete(COOKIE_NAME_OTP)
     return new Response(null, APP_RES_INIT_DEFAULT_BAD)
   }
 
   let id = encodedOtpTokenList.pop()
 
   if (!id) {
-    cookies.delete(COOKIE_OTP)
+    cookies.delete(COOKIE_NAME_OTP)
     await kmsOtp.rotate(kekId)
     return new Response(null, APP_RES_INIT_DEFAULT_BAD)
   }
 
   if (!encodedOtpTokenList.length || encodedOtpTokenList.length > otpAttributes.maxCredentials) {
-    cookies.delete(COOKIE_OTP)
+    cookies.delete(COOKIE_NAME_OTP)
     await Promise.allSettled([deleteOtpTokenId(id), kmsOtp.rotate(kekId)])
     return new Response(null, APP_RES_INIT_DEFAULT_BAD)
   }
@@ -125,7 +125,7 @@ export default async function handleOtpEnterVerification(req) {
   } else {
     currentOtpToken = decodeOtpToken(encodedOtpTokenList.pop() || "")
     if (!currentOtpToken) {
-      cookies.delete(COOKIE_OTP)
+      cookies.delete(COOKIE_NAME_OTP)
       await Promise.allSettled([deleteOtpTokenId(id), kmsOtp.rotate(kekId)])
       return new Response(null, APP_RES_INIT_DEFAULT_BAD)
     }
@@ -141,7 +141,7 @@ export default async function handleOtpEnterVerification(req) {
   for (const encodedOtpToken of encodedOtpTokenList) {
     const otpToken = decodeOtpToken(encodedOtpToken)
     if (!otpToken) {
-      cookies.delete(COOKIE_OTP)
+      cookies.delete(COOKIE_NAME_OTP)
       await Promise.allSettled([deleteOtpTokenId(id), kmsOtp.rotate(kekId)])
       return new Response(null, APP_RES_INIT_DEFAULT_BAD)
     }
@@ -210,7 +210,7 @@ export default async function handleOtpEnterVerification(req) {
     id = await replaceOtpTokenId(id, expires)
 
     if (!id) {
-      cookies.delete(COOKIE_OTP)
+      cookies.delete(COOKIE_NAME_OTP)
       return new Response(null, APP_RES_INIT_DEFAULT_BAD)
     }
 
@@ -262,7 +262,7 @@ export default async function handleOtpEnterVerification(req) {
 
   const otpTokenIdDeleteResult = await deleteOtpTokenId(id, expires)
 
-  cookies.delete(COOKIE_OTP)
+  cookies.delete(COOKIE_NAME_OTP)
 
   if (!otpTokenIdDeleteResult) {
     return new Response(null, APP_RES_INIT_DEFAULT_BAD)

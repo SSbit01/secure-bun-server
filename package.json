@@ -24,6 +24,7 @@
     "compile": "bun ./scripts/compile.js",
     "start": "bun ./dist/index.js",
     "biome:check": "biome check",
+    "biome:check:write": "biome check --write",
     "biome:format": "biome format",
     "biome:format:write": "biome format --write"
   },

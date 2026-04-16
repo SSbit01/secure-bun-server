@@ -1,7 +1,7 @@
 import otpAttributes from "#shared/otp.json"
 
 import { decryptTextSymmetrically } from "#src/lib/crypto/symmetric/dek"
-import { COOKIE_OTP } from "#src/lib/cookie"
+import { COOKIE_NAME_OTP } from "#src/lib/cookie"
 import { OTP, ATTEMPTS, RESEND_BLOCK, OTP_BLOCK } from "#src/lib/otp/encode/token"
 import production from "#src/lib/production"
 import { regexOtp } from "#src/lib/regex"
@@ -71,7 +71,7 @@ export function isOtpValid(otp) {
 export function setOtpCookie(cookies, otpData, expires) {
 
   cookies.set(
-    COOKIE_OTP,
+    COOKIE_NAME_OTP,
     otpData,
     {
       path: "/",

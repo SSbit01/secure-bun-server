@@ -3,28 +3,15 @@ import { compressNumber, decompressNumber } from "#src/lib/compression/number"
 import { ENVELOPE_ENCRYPTION_WRAP_LENGTH, KEK_ID_LENGTH, SESSION_MAX_AGE_MS } from "#src/lib/computed"
 import { createId, isBase64UrlIdValid } from "#src/lib/crypto/id"
 import { createDek } from "#src/lib/crypto/symmetric/dek"
+import { COOKIE_NAME_SESSION } from "#src/lib/cookie"
+import { COOKIE_OPTIONS_SESSION } from "#src/lib/cookie/options"
 import { createKek, wrapKey } from "#src/lib/crypto/symmetric/kek"
-import { COOKIE_SESSION } from "#src/lib/cookie"
 import { encryptTextSymmetrically, decryptTextSymmetrically } from "#src/lib/crypto/symmetric/dek"
 import { KEK_ID_BYTES, MAX_KMS_STORE_ATTEMPTS } from "#src/lib/kms"
 import sql from "#src/lib/sql"
-import production from "#src/lib/production"
-import { SESSION_MAX_AGE } from "#src/lib/session/custom"
 import kmsSession from "#src/lib/session/kms"
 
 
-
-/**
- * @type {Bun.CookieInit}
- */
-const COOKIE_SESSION_OPTIONS = Object.freeze({
-  path: "/",
-  secure: production,
-  sameSite: "lax",
-  httpOnly: true,
-  partitioned: false,
-  maxAge: SESSION_MAX_AGE
-})
 
 /**
  * 200ms as default time between requests.
@@ -45,7 +32,7 @@ const TOKEN_SEPARATOR = ","
  */
 export async function getSession(cookies) {
 
-  const sessionData = cookies.get(COOKIE_SESSION)
+  const sessionData = cookies.get(COOKIE_NAME_SESSION)
 
   if (!sessionData) {
     return
@@ -61,7 +48,7 @@ export async function getSession(cookies) {
   )
 
   if (!dek) {
-    cookies.delete(COOKIE_SESSION)
+    cookies.delete(COOKIE_NAME_SESSION)
     return
   }
 
@@ -81,7 +68,7 @@ export async function getSession(cookies) {
       Uint8Array.fromBase64(kekId, BASE64URL_OPTIONS)
     )).split(TOKEN_SEPARATOR)
   } catch {
-    cookies.delete(COOKIE_SESSION)
+    cookies.delete(COOKIE_NAME_SESSION)
     return
   }
 
@@ -105,7 +92,7 @@ export async function getSession(cookies) {
     lastValidAccessDate > dateNow
   ) {
 
-    cookies.delete(COOKIE_SESSION)
+    cookies.delete(COOKIE_NAME_SESSION)
 
     /**
      * Delete key too.
@@ -137,7 +124,7 @@ export async function getSession(cookies) {
   }
 
   if (elapsed >= SESSION_MAX_AGE_MS) {
-    cookies.delete(COOKIE_SESSION)
+    cookies.delete(COOKIE_NAME_SESSION)
     return
   }
 
@@ -188,7 +175,7 @@ export default class Session {
    * @function deleteCookie
    */
   deleteCookie() {
-    this.#cookies.delete(COOKIE_SESSION)
+    this.#cookies.delete(COOKIE_NAME_SESSION)
   }
 
 
@@ -328,7 +315,7 @@ WHERE session_id=${this.#id}`
     const compressedDateNow = compressNumber(Date.now())
 
     this.#cookies.set(
-      COOKIE_SESSION,
+      COOKIE_NAME_SESSION,
       this.#envelope + await encryptTextSymmetrically(
         this.#dek,
         (
@@ -339,7 +326,7 @@ WHERE session_id=${this.#id}`
         ),
         additionalData
       ),
-      COOKIE_SESSION_OPTIONS
+      COOKIE_OPTIONS_SESSION
     )
 
   }

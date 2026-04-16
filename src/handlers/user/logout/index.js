@@ -1,4 +1,4 @@
-import { COOKIE_SESSION } from "#src/lib/cookie"
+import { COOKIE_NAME_SESSION } from "#src/lib/cookie"
 import { APP_RES_INIT_204 } from "#src/lib/response/app"
 
 
@@ -10,7 +10,7 @@ import { APP_RES_INIT_204 } from "#src/lib/response/app"
  */
 export default async function handleUserLogout({ cookies }) {
 
-  cookies.delete(COOKIE_SESSION)
+  cookies.delete(COOKIE_NAME_SESSION)
 
   return new Response(null, APP_RES_INIT_204)
 
