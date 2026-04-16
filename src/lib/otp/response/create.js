@@ -29,12 +29,12 @@ import { msToSeconds } from "#src/lib/time"
 
 /**
  * @async
- * @function generateOtpTokenListCreationResponse
+ * @function createOtpTokenListCreationResponse
  * @param {Bun.CookieMap} cookies
  * @param {string} credential
  * @return {Promise<Response>}
  */
-async function generateOtpTokenListCreationResponse(cookies, credential) {
+async function createOtpTokenListCreationResponse(cookies, credential) {
 
   const otp = createOtp()
 
@@ -113,7 +113,7 @@ export default async function generateOtpCreationResponse(cookies, credential) {
   const otpData = cookies.get(COOKIE_OTP)?.trim()
 
   if (!otpData) {
-    return await generateOtpTokenListCreationResponse(cookies, credential)
+    return await createOtpTokenListCreationResponse(cookies, credential)
   }
 
   let kekId = otpData.substring(0, KEK_ID_LENGTH)
@@ -121,7 +121,7 @@ export default async function generateOtpCreationResponse(cookies, credential) {
   let dek = await kmsOtp.getDek(kekId, otpData.substring(KEK_ID_LENGTH, ENVELOPE_ENCRYPTION_WRAP_LENGTH))
 
   if (!dek) {
-    return await generateOtpTokenListCreationResponse(cookies, credential)
+    return await createOtpTokenListCreationResponse(cookies, credential)
   }
 
   let additionalData = Uint8Array.fromBase64(kekId, BASE64URL_OPTIONS)
@@ -133,7 +133,7 @@ export default async function generateOtpCreationResponse(cookies, credential) {
   )
 
   if (!encodedOtpTokenList) {
-    return await generateOtpTokenListCreationResponse(cookies, credential)
+    return await createOtpTokenListCreationResponse(cookies, credential)
   }
 
   const id = encodedOtpTokenList.pop()
@@ -191,7 +191,7 @@ export default async function generateOtpCreationResponse(cookies, credential) {
 
   if (!expires) {
     // All OTP tokens have expired, create a new list.
-    return await generateOtpTokenListCreationResponse(cookies, credential)
+    return await createOtpTokenListCreationResponse(cookies, credential)
   }
 
   /**
