@@ -1,7 +1,7 @@
 import process from "node:process";
 import otpAttributes from "#shared/otp.json";
 
-const isTest = process.env.NODE_ENV === "test";
+const test = process.env.NODE_ENV === "test";
 
 /**
  * When the user enters the code incorrectly many times and reaches this number of attempts,
@@ -22,7 +22,7 @@ export const OTP_ATTEMPTS_BLOCK = 1;
  *
  * @type {number}
  */
-export const OTP_INVALID_BLOCK_SECONDS = isTest ? 3 : 20;
+export const OTP_INVALID_BLOCK_SECONDS = test ? 3 : 20;
 
 /**
  * The maximum validity period of an OTP token in seconds.
@@ -47,7 +47,7 @@ export const OTP_MAX_ATTEMPTS = 3;
  *
  * @type {number}
  */
-export const OTP_RESEND_BLOCK_SECONDS = isTest ? 3 : 30;
+export const OTP_RESEND_BLOCK_SECONDS = test ? 3 : 30;
 
 /**
  * This implenetation creates an OTP with lowercase letters and numbers.
