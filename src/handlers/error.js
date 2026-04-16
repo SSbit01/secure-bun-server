@@ -1,4 +1,4 @@
-import { APP_RES_INIT_500 } from "#src/lib/response/app"
+import { APP_RES_INIT_500 } from "#src/lib/response/app";
 
 /**
  * @this Bun.Server<any>
@@ -7,6 +7,6 @@ import { APP_RES_INIT_500 } from "#src/lib/response/app"
  * @returns {Response}
  */
 export default function handleError(error) {
-  console.error(error)
-  return new Response(null, APP_RES_INIT_500)
+  console.error(error);
+  return new Response(null, APP_RES_INIT_500);
 }

@@ -1,28 +1,23 @@
-import { BASE64URL_OPTIONS } from "#src/lib/base64"
-import { compressNumber, decompressNumber } from "#src/lib/compression/number"
-import { ENVELOPE_ENCRYPTION_WRAP_LENGTH, KEK_ID_LENGTH, SESSION_MAX_AGE_MS } from "#src/lib/computed"
-import { createId, isBase64UrlIdValid } from "#src/lib/crypto/id"
-import { createDek } from "#src/lib/crypto/symmetric/dek"
-import { COOKIE_NAME_SESSION } from "#src/lib/cookie"
-import { COOKIE_OPTIONS_SESSION } from "#src/lib/cookie/options"
-import { createKek, wrapKey } from "#src/lib/crypto/symmetric/kek"
-import { encryptTextSymmetrically, decryptTextSymmetrically } from "#src/lib/crypto/symmetric/dek"
-import { KEK_ID_BYTES, MAX_KMS_STORE_ATTEMPTS } from "#src/lib/kms"
-import sql from "#src/lib/sql"
-import kmsSession from "#src/lib/session/kms"
-
-
+import { BASE64URL_OPTIONS } from "#src/lib/base64";
+import { compressNumber, decompressNumber } from "#src/lib/compression/number";
+import { ENVELOPE_ENCRYPTION_WRAP_LENGTH, KEK_ID_LENGTH, SESSION_MAX_AGE_MS } from "#src/lib/computed";
+import { COOKIE_NAME_SESSION } from "#src/lib/cookie";
+import { COOKIE_OPTIONS_SESSION } from "#src/lib/cookie/options";
+import { createId, isBase64UrlIdValid } from "#src/lib/crypto/id";
+import { createDek, decryptTextSymmetrically, encryptTextSymmetrically } from "#src/lib/crypto/symmetric/dek";
+import { createKek, wrapKey } from "#src/lib/crypto/symmetric/kek";
+import { KEK_ID_BYTES, MAX_KMS_STORE_ATTEMPTS } from "#src/lib/kms";
+import kmsSession from "#src/lib/session/kms";
+import sql from "#src/lib/sql";
 
 /**
  * 200ms as default time between requests.
- * 
+ *
  * @type {number}
  */
-const MINIMUM_DELAY = 200
+const MINIMUM_DELAY = 200;
 
-const TOKEN_SEPARATOR = ","
-
-
+const TOKEN_SEPARATOR = ",";
 
 /**
  * @async
@@ -31,126 +26,108 @@ const TOKEN_SEPARATOR = ","
  * @returns {Promise<Session|undefined>}
  */
 export async function getSession(cookies) {
-
-  const sessionData = cookies.get(COOKIE_NAME_SESSION)
+  const sessionData = cookies.get(COOKIE_NAME_SESSION);
 
   if (!sessionData) {
-    return
+    return;
   }
 
-  const envelope = sessionData.substring(0, ENVELOPE_ENCRYPTION_WRAP_LENGTH)
+  const envelope = sessionData.substring(0, ENVELOPE_ENCRYPTION_WRAP_LENGTH);
 
-  const kekId = envelope.substring(0, KEK_ID_LENGTH)
+  const kekId = envelope.substring(0, KEK_ID_LENGTH);
 
-  const dek = await kmsSession.getDek(
-    kekId,
-    envelope.substring(KEK_ID_LENGTH)
-  )
+  const dek = await kmsSession.getDek(kekId, envelope.substring(KEK_ID_LENGTH));
 
   if (!dek) {
-    cookies.delete(COOKIE_NAME_SESSION)
-    return
+    cookies.delete(COOKIE_NAME_SESSION);
+    return;
   }
 
   /**
    * @type {Array<string|undefined>}
    */
-  let sessionInfo
+  let sessionInfo;
 
   try {
     /**
      * All dates are compressed.
      * [sessionId: string, dekRotationDate: string, lastFetchDate: string lastValidAccessDate: string]
      */
-    sessionInfo = (await decryptTextSymmetrically(
-      dek,
-      sessionData.substring(ENVELOPE_ENCRYPTION_WRAP_LENGTH),
-      Uint8Array.fromBase64(kekId, BASE64URL_OPTIONS)
-    )).split(TOKEN_SEPARATOR)
+    sessionInfo = (
+      await decryptTextSymmetrically(
+        dek,
+        sessionData.substring(ENVELOPE_ENCRYPTION_WRAP_LENGTH),
+        Uint8Array.fromBase64(kekId, BASE64URL_OPTIONS)
+      )
+    ).split(TOKEN_SEPARATOR);
   } catch {
-    cookies.delete(COOKIE_NAME_SESSION)
-    return
+    cookies.delete(COOKIE_NAME_SESSION);
+    return;
   }
 
-  const idString = isBase64UrlIdValid(sessionInfo[0] || "") && sessionInfo[0]
-  const dekRotationDate = decompressNumber(sessionInfo[1] || "")
-  const lastFetchDate = decompressNumber(sessionInfo[2] || "")
-  const lastValidAccessDate = decompressNumber(sessionInfo[3] || "")
+  const idString = isBase64UrlIdValid(sessionInfo[0] || "") && sessionInfo[0];
+  const dekRotationDate = decompressNumber(sessionInfo[1] || "");
+  const lastFetchDate = decompressNumber(sessionInfo[2] || "");
+  const lastValidAccessDate = decompressNumber(sessionInfo[3] || "");
 
-  const dateNow = Date.now()
-
+  const dateNow = Date.now();
 
   if (
     sessionInfo.length !== 4 ||
     !idString ||
     !dekRotationDate ||
-    (dekRotationDate - dateNow) > SESSION_MAX_AGE_MS ||
+    dekRotationDate - dateNow > SESSION_MAX_AGE_MS ||
     !lastFetchDate ||
     !lastValidAccessDate ||
     lastValidAccessDate > dekRotationDate ||
     lastFetchDate > lastValidAccessDate ||
     lastValidAccessDate > dateNow
   ) {
-
-    cookies.delete(COOKIE_NAME_SESSION)
+    cookies.delete(COOKIE_NAME_SESSION);
 
     /**
      * Delete key too.
      */
-    const promises = [kmsSession.rotate(kekId)]
+    const promises = [kmsSession.rotate(kekId)];
 
     if (idString) {
       promises.push(
         sql`UPDATE users SET session_id=RANDOM_BYTES(18) WHERE session_id=${Uint8Array.fromBase64(idString, BASE64URL_OPTIONS)}`
-      )
+      );
     }
 
     // @ts-expect-error: promises has already keyRotation
-    const [{ status: keyRotationStatus }] = await Promise.allSettled(promises)
+    const [{ status: keyRotationStatus }] = await Promise.allSettled(promises);
 
     if (keyRotationStatus === "rejected") {
-      console.warn("Key rotation failed: " + kekId)
+      console.warn("Key rotation failed: " + kekId);
     }
 
-    return
-
+    return;
   }
 
-
-  const elapsed = Date.now() - lastValidAccessDate
+  const elapsed = Date.now() - lastValidAccessDate;
 
   if (elapsed < MINIMUM_DELAY) {
-    return
+    return;
   }
 
   if (elapsed >= SESSION_MAX_AGE_MS) {
-    cookies.delete(COOKIE_NAME_SESSION)
-    return
+    cookies.delete(COOKIE_NAME_SESSION);
+    return;
   }
 
-  return new Session(
-    cookies,
-    idString,
-    dek,
-    dekRotationDate,
-    envelope,
-    lastFetchDate
-  )
-
+  return new Session(cookies, idString, dek, dekRotationDate, envelope, lastFetchDate);
 }
 
-
-
 export default class Session {
-
-  #cookies
-  #dek
-  #dekRotationDate
-  #envelope
-  #id
-  #idString
-  #lastFetchDate
-
+  #cookies;
+  #dek;
+  #dekRotationDate;
+  #envelope;
+  #id;
+  #idString;
+  #lastFetchDate;
 
   /**
    * @param {Bun.CookieMap} cookies
@@ -161,23 +138,21 @@ export default class Session {
    * @param {number} [lastFetchDate]
    */
   constructor(cookies, idString, dek, dekRotationDate, envelope = "", lastFetchDate) {
-    this.#cookies = cookies
-    this.#dek = dek
-    this.#dekRotationDate = dekRotationDate
-    this.#envelope = envelope
-    this.#id = Uint8Array.fromBase64(idString, BASE64URL_OPTIONS)
-    this.#idString = idString
-    this.#lastFetchDate = lastFetchDate
+    this.#cookies = cookies;
+    this.#dek = dek;
+    this.#dekRotationDate = dekRotationDate;
+    this.#envelope = envelope;
+    this.#id = Uint8Array.fromBase64(idString, BASE64URL_OPTIONS);
+    this.#idString = idString;
+    this.#lastFetchDate = lastFetchDate;
   }
-
 
   /**
    * @function deleteCookie
    */
   deleteCookie() {
-    this.#cookies.delete(COOKIE_NAME_SESSION)
+    this.#cookies.delete(COOKIE_NAME_SESSION);
   }
-
 
   /**
    * @async
@@ -185,9 +160,8 @@ export default class Session {
    * @returns {Promise<boolean>}
    */
   async deleteAccount() {
-    return (await sql`DELETE FROM users WHERE session_id=${this.#id}`).affectedRows > 0
+    return (await sql`DELETE FROM users WHERE session_id=${this.#id}`).affectedRows > 0;
   }
-
 
   /**
    * @async
@@ -196,16 +170,16 @@ export default class Session {
    */
   async deleteEmailBackup() {
     return (
-      await sql
-`DELETE e,ue FROM emails e
+      (
+        await sql`DELETE e,ue FROM emails e
 INNER JOIN user_emails ue ON e.id=ue.email_id
 INNER JOIN users u ON ue.user_id=u.id
 WHERE
 ue.is_backup=1 AND
 u.session_id=${this.#id}`
-    ).affectedRows > 0
+      ).affectedRows > 0
+    );
   }
-
 
   /**
    * @async
@@ -213,9 +187,7 @@ u.session_id=${this.#id}`
    * @returns {Promise<{email:string,display_name?:string,email2?:string}|undefined>}
    */
   async getUserData() {
-
-    const [data] = await sql
-`SELECT
+    const [data] = await sql`SELECT
 u.display_name,ANY_VALUE(CASE WHEN ue.is_backup=FALSE THEN e.email END)
 AS email,ANY_VALUE(CASE WHEN ue.is_backup=TRUE THEN e.email END)
 AS email2
@@ -223,24 +195,22 @@ FROM users u
 INNER JOIN user_emails ue ON u.id=ue.user_id
 INNER JOIN emails e ON ue.email_id=e.id
 WHERE u.session_id=${this.#id}
-GROUP BY u.id`
+GROUP BY u.id`;
 
     if (!data) {
-      return
+      return;
     }
-    
+
     if (!data.display_name) {
-      delete data.display_name
+      delete data.display_name;
     }
 
     if (!data.email2) {
-      delete data.email2
+      delete data.email2;
     }
-    
-    return data
 
+    return data;
   }
-
 
   /**
    * @async
@@ -248,89 +218,83 @@ GROUP BY u.id`
    * @returns {Promise<bigint|number|undefined>}
    */
   async getUserId() {
-    return (await sql`SELECT id FROM users WHERE session_id=${this.#id}`)[0]?.id
+    return (await sql`SELECT id FROM users WHERE session_id=${this.#id}`)[0]?.id;
   }
-
 
   /**
    * @async
    * @function isEmailTaken
-   * @param {string} email 
+   * @param {string} email
    * @returns {Promise<boolean>}
    */
   async isEmailTaken(email) {
-
-    const [result] = await sql
-`SELECT
+    const [result] = await sql`SELECT
 EXISTS(SELECT 1 FROM emails e LEFT JOIN user_emails ue ON e.id=ue.email_id WHERE ue.user_id IS NOT NULL AND e.email=${email}) AS r
 FROM users
-WHERE session_id=${this.#id}`
+WHERE session_id=${this.#id}`;
 
     if (!result) {
-      this.deleteCookie()
-      return true
+      this.deleteCookie();
+      return true;
     }
 
-    return Boolean(result?.r)
-
+    return Boolean(result?.r);
   }
-
 
   /**
    * @async
    * @function save
    */
   async save() {
-
     /**
      * @type {Uint8Array<ArrayBuffer>}
      */
-    let additionalData
+    let additionalData;
 
-    let kekId = await kmsSession.getCurrentId()
+    let kekId = await kmsSession.getCurrentId();
 
     if (this.#dek && this.#dekRotationDate && this.#dekRotationDate > Date.now() && this.#envelope.startsWith(kekId)) {
-      additionalData = Uint8Array.fromBase64(kekId, BASE64URL_OPTIONS)
+      additionalData = Uint8Array.fromBase64(kekId, BASE64URL_OPTIONS);
     } else {
-      let kek = await kmsSession.get(kekId)
+      let kek = await kmsSession.get(kekId);
       if (kek) {
-        additionalData = Uint8Array.fromBase64(kekId, BASE64URL_OPTIONS)
+        additionalData = Uint8Array.fromBase64(kekId, BASE64URL_OPTIONS);
       } else {
-        let i = 0
+        let i = 0;
         do {
-          additionalData = createId(KEK_ID_BYTES)
-          kekId = additionalData.toBase64(BASE64URL_OPTIONS)
-          kek = await createKek()
-          i++
-        } while(!await kmsSession.store(kekId, kek) && i < MAX_KMS_STORE_ATTEMPTS)
+          additionalData = createId(KEK_ID_BYTES);
+          kekId = additionalData.toBase64(BASE64URL_OPTIONS);
+          kek = await createKek();
+          i++;
+        } while (!(await kmsSession.store(kekId, kek)) && i < MAX_KMS_STORE_ATTEMPTS);
         if (i >= MAX_KMS_STORE_ATTEMPTS) {
-          throw new Error("Too many attempts to store a KEK in KMS: SESSION")
+          throw new Error("Too many attempts to store a KEK in KMS: SESSION");
         }
       }
-      this.#dek = await createDek()
-      this.#envelope = kekId + new Uint8Array(await wrapKey(this.#dek, kek)).toBase64(BASE64URL_OPTIONS)
-      this.#dekRotationDate = Date.now() + SESSION_MAX_AGE_MS
+      this.#dek = await createDek();
+      this.#envelope = kekId + new Uint8Array(await wrapKey(this.#dek, kek)).toBase64(BASE64URL_OPTIONS);
+      this.#dekRotationDate = Date.now() + SESSION_MAX_AGE_MS;
     }
 
-    const compressedDateNow = compressNumber(Date.now())
+    const compressedDateNow = compressNumber(Date.now());
 
     this.#cookies.set(
       COOKIE_NAME_SESSION,
-      this.#envelope + await encryptTextSymmetrically(
-        this.#dek,
-        (
-          this.#idString + TOKEN_SEPARATOR +
-          compressNumber(this.#dekRotationDate) + TOKEN_SEPARATOR +
-          (this.#lastFetchDate ? compressNumber(this.#lastFetchDate) : compressedDateNow) + TOKEN_SEPARATOR +
-          compressedDateNow
-        ),
-        additionalData
-      ),
+      this.#envelope +
+        (await encryptTextSymmetrically(
+          this.#dek,
+          this.#idString +
+            TOKEN_SEPARATOR +
+            compressNumber(this.#dekRotationDate) +
+            TOKEN_SEPARATOR +
+            (this.#lastFetchDate ? compressNumber(this.#lastFetchDate) : compressedDateNow) +
+            TOKEN_SEPARATOR +
+            compressedDateNow,
+          additionalData
+        )),
       COOKIE_OPTIONS_SESSION
-    )
-
+    );
   }
-
 
   /**
    * @async
@@ -342,17 +306,15 @@ WHERE session_id=${this.#id}`
      * Checks if backup email is set too.
      */
 
-    const { affectedRows } = await sql
-`UPDATE user_emails ue
+    const { affectedRows } = await sql`UPDATE user_emails ue
 INNER JOIN users u ON u.id=ue.user_id
 SET ue.is_backup=!ue.is_backup
 WHERE
 u.session_id=${this.#id} AND
-EXISTS(SELECT 1 FROM user_emails ue2 WHERE ue2.user_id=u.id AND ue2.is_backup=TRUE)`
+EXISTS(SELECT 1 FROM user_emails ue2 WHERE ue2.user_id=u.id AND ue2.is_backup=TRUE)`;
 
-    return affectedRows > 0
+    return affectedRows > 0;
   }
-
 
   /**
    * @async
@@ -361,26 +323,23 @@ EXISTS(SELECT 1 FROM user_emails ue2 WHERE ue2.user_id=u.id AND ue2.is_backup=TR
    * @returns {Promise<boolean>}
    */
   async updateDisplayName(newDisplayName) {
-    
-    const [user] = await sql`SELECT id,display_name FROM users WHERE session_id=${this.#id}`
+    const [user] = await sql`SELECT id,display_name FROM users WHERE session_id=${this.#id}`;
 
     if (!user) {
-      return false
+      return false;
     }
 
     if (user.display_name !== newDisplayName) {
-      await sql`UPDATE users SET display_name=${newDisplayName} WHERE id=${!user.id}`
+      await sql`UPDATE users SET display_name=${newDisplayName} WHERE id=${!user.id}`;
     }
 
-    return true
-
+    return true;
   }
-
 
   /**
    * It works with concurrent requests.
    * If the previous email gets an invitation during this request, that email address doesn't change.
-   * 
+   *
    * @async
    * @function updateEmail
    * @param {string} newEmail
@@ -388,62 +347,54 @@ EXISTS(SELECT 1 FROM user_emails ue2 WHERE ue2.user_id=u.id AND ue2.is_backup=TR
    * @returns {Promise<boolean>}
    */
   async updateEmail(newEmail, backup = false) {
-
     /**
      * Old email address will be deleted by the `delete_expired_rows` scheduler, see `setup.sql`.
      */
 
-    const [data] = await sql
-`SELECT u.id,e.id AS email_id
+    const [data] = await sql`SELECT u.id,e.id AS email_id
 FROM users u
 LEFT JOIN emails e ON e.email=${newEmail}
-WHERE u.session_id=${this.#id}`
+WHERE u.session_id=${this.#id}`;
 
     if (!data) {
-      return false
+      return false;
     }
 
     if (data.email_id) {
-      await sql
-`INSERT INTO user_emails (email_id,user_id,is_backup) VALUES
+      await sql`INSERT INTO user_emails (email_id,user_id,is_backup) VALUES
 (${data.email_id},${data.id},${backup})
-ON DUPLICATE KEY UPDATE email_id=${data.email_id}`
+ON DUPLICATE KEY UPDATE email_id=${data.email_id}`;
 
-      return true
+      return true;
     }
 
     /**
      * @type {boolean}
      */
-    let result = false
+    let result = false;
 
     await sql.begin(async tx => {
-      data.email_id = (await tx`INSERT INTO emails (email) VALUES (${newEmail})`).lastInsertRowid
+      data.email_id = (await tx`INSERT INTO emails (email) VALUES (${newEmail})`).lastInsertRowid;
 
-      result = (await tx
-`INSERT INTO user_emails (email_id,user_id,is_backup) VALUES
+      result =
+        (
+          await tx`INSERT INTO user_emails (email_id,user_id,is_backup) VALUES
 (${data.email_id},${data.id},${backup})
-ON DUPLICATE KEY UPDATE email_id=${data.email_id}`).affectedRows > 0
-    })
+ON DUPLICATE KEY UPDATE email_id=${data.email_id}`
+        ).affectedRows > 0;
+    });
 
-    return result
-
+    return result;
   }
-
 
   /**
    * This function (unlike `updateSessionId`) doesn't update the internal `id` state, so the session cannot be reused.
-   * 
+   *
    * @async
    * @function updateSessionIdFast
    * @returns {Promise<boolean>}
    */
   async updateSessionIdFast() {
-
-    return (
-      await sql`UPDATE users SET session_id=RANDOM_BYTES(18) WHERE session_id=${this.#id}`
-    ).affectedRows > 0
-
+    return (await sql`UPDATE users SET session_id=RANDOM_BYTES(18) WHERE session_id=${this.#id}`).affectedRows > 0;
   }
-
 }

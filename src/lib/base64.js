@@ -2,8 +2,7 @@
 export const BASE64URL_OPTIONS = Object.freeze({
   alphabet: "base64url",
   omitPadding: true
-})
-
+});
 
 /**
  * @function bytesToBase64Length
@@ -11,5 +10,5 @@ export const BASE64URL_OPTIONS = Object.freeze({
  * @returns {number} The length of the base64 string (without padding).
  */
 export function bytesToBase64Length(bytesLength) {
-  return Math.ceil(bytesLength / 3 * 4)
+  return Math.ceil((bytesLength / 3) * 4);
 }

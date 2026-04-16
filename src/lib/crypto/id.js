@@ -1,23 +1,20 @@
-import { bytesToBase64Length } from "#src/lib/base64"
-import { regexBase64Url } from "#src/lib/regex"
+import { bytesToBase64Length } from "#src/lib/base64";
+import { regexBase64Url } from "#src/lib/regex";
 
-
-export const DEFAULT_ID_LENGTH = 18
-
+export const DEFAULT_ID_LENGTH = 18;
 
 /**
  * This implementation generates a cryptographically secure 144-bit length random value by default.
- * 
+ *
  * - Unlike UUIDv7 or ULID, this ID is not time-based, mitigating risks of timing attacks and timestamp leakage.
- * 
+ *
  * @function createId
  * @param {number} [length] - The length of the ID to generate (18 by default; higher entropy than UUIDv4 [122 vs 144 bits]).
  * @returns {Uint8Array<ArrayBuffer>} A random ID.
  */
 export function createId(length = DEFAULT_ID_LENGTH) {
-  return crypto.getRandomValues(new Uint8Array(length))
+  return crypto.getRandomValues(new Uint8Array(length));
 }
-
 
 /**
  * @function isBase64UrlIdValid
@@ -26,5 +23,5 @@ export function createId(length = DEFAULT_ID_LENGTH) {
  * @returns {boolean}
  */
 export function isBase64UrlIdValid(id, length = bytesToBase64Length(DEFAULT_ID_LENGTH)) {
-  return id.length === length && regexBase64Url.test(id)
+  return id.length === length && regexBase64Url.test(id);
 }

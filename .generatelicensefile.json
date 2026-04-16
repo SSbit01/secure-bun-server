@@ -1,11 +1,11 @@
 {
-  "inputs": ["./package.json"],
-  "output": "./dist/LICENSES.txt",
-  "overwrite": true,
-  "eol": "lf",
+  "append": ["./humans.txt", "./LICENSE"],
   "ci": true,
+  "eol": "lf",
+  "inputs": ["./package.json"],
   "no-spinner": false,
   "omitVersions": false,
-  "version": false,
-  "append": ["./humans.txt", "./LICENSE"]
+  "output": "./dist/LICENSES.txt",
+  "overwrite": true,
+  "version": false
 }

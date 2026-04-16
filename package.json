@@ -1,41 +1,41 @@
 {
-  "name": "secure-bun-server",
-  "description": "Template with passwordless authentication via email, KMS, and a MariaDB/MySQL database configured in Bun.",
   "author": "Stefan Samson <ss42701@outlook.com> (https://ssbit01.github.io/)",
-  "license": "MIT",
-  "repository": "github:SSbit01/secure-bun-server",
-  "homepage": "https://github.com/SSbit01/secure-bun-server#readme",
   "bugs": {
     "url": "https://github.com/SSbit01/secure-bun-server/issues"
-  },
-  "type": "module",
-  "private": true,
-  "engines": {
-    "bun": ">=1.3"
-  },
-  "main": "./src/index.js",
-  "scripts": {
-    "dev": "bun --hot ./src/index.js",
-    "setup": "bun run --parallel \"setup:*\"",
-    "setup:sql": "bun ./scripts/setup/sql.js",
-    "test": "bun test --bail",
-    "license": "generate-license-file",
-    "build": "bun ./scripts/build.js",
-    "compile": "bun ./scripts/compile.js",
-    "start": "bun ./dist/index.js",
-    "biome:check": "biome check",
-    "biome:check:write": "biome check --write",
-    "biome:format": "biome format",
-    "biome:format:write": "biome format --write"
   },
   "dependencies": {
     "mailchecker": "^6.0.20",
     "validator": "^13.15.26"
   },
+  "description": "Template with passwordless authentication via email, KMS, and a MariaDB/MySQL database configured in Bun.",
   "devDependencies": {
     "@biomejs/biome": "2.4.7",
     "@types/validator": "^13.15.10",
     "bun-types": "^1.3.11",
     "generate-license-file": "^4.1.1"
-  }
+  },
+  "engines": {
+    "bun": ">=1.3"
+  },
+  "homepage": "https://github.com/SSbit01/secure-bun-server#readme",
+  "license": "MIT",
+  "main": "./src/index.js",
+  "name": "secure-bun-server",
+  "private": true,
+  "repository": "github:SSbit01/secure-bun-server",
+  "scripts": {
+    "biome:check": "biome check",
+    "biome:check:write": "biome check --write",
+    "biome:format": "biome format",
+    "biome:format:write": "biome format --write",
+    "build": "bun ./scripts/build.js",
+    "compile": "bun ./scripts/compile.js",
+    "dev": "bun --hot ./src/index.js",
+    "license": "generate-license-file",
+    "setup": "bun run --parallel \"setup:*\"",
+    "setup:sql": "bun ./scripts/setup/sql.js",
+    "start": "bun ./dist/index.js",
+    "test": "bun test --bail"
+  },
+  "type": "module"
 }

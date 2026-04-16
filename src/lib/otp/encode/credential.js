@@ -4,9 +4,8 @@
  * @returns {string}
  */
 export function encodeCredential(credential) {
-  return encodeURIComponent(credential)
+  return encodeURIComponent(credential);
 }
-
 
 /**
  * @function decodeCredential
@@ -14,5 +13,5 @@ export function encodeCredential(credential) {
  * @returns {string}
  */
 export function decodeCredential(encodedCredential) {
-  return decodeURIComponent(encodedCredential).trim()
+  return decodeURIComponent(encodedCredential).trim();
 }

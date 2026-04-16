@@ -1,5 +1,4 @@
-import { APP_RES_INIT_DEFAULT_BAD } from "#src/lib/response/app"
-
+import { APP_RES_INIT_DEFAULT_BAD } from "#src/lib/response/app";
 
 /**
  * @this Bun.Server<any>
@@ -8,5 +7,6 @@ import { APP_RES_INIT_DEFAULT_BAD } from "#src/lib/response/app"
  * @returns {Response}
  */
 export default function handleFetch(req) {
-  return new Response(null, APP_RES_INIT_DEFAULT_BAD)
+  console.log(req);
+  return new Response(null, APP_RES_INIT_DEFAULT_BAD);
 }

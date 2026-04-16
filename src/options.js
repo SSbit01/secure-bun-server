@@ -1,15 +1,13 @@
-import fetch from "#src/handlers/fetch"
-import error from "#src/handlers/error"
-import ROUTES from "#src/routes"
-import photoAttributes from "#shared/photo.json"
-
+import photoAttributes from "#shared/photo.json";
+import error from "#src/handlers/error";
+import fetch from "#src/handlers/fetch";
+import ROUTES from "#src/routes";
 
 const OPTIONS = Object.freeze({
-  maxRequestBodySize: photoAttributes.maxPhotoSize,
-  routes: ROUTES,
+  error,
   fetch,
-  error
-})
+  maxRequestBodySize: photoAttributes.maxPhotoSize,
+  routes: ROUTES
+});
 
-
-export default OPTIONS
+export default OPTIONS;

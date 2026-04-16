@@ -1,10 +1,9 @@
-import { generateLicenseFile } from "generate-license-file"
-import generateLicenseFileConfig from "../.generatelicensefile.json"
+import { generateLicenseFile } from "generate-license-file";
+import generateLicenseFileConfig from "../.generatelicensefile.json";
 
+const output = "./dist";
 
-const output = "./dist"
-
-console.log("Compiling...")
+console.log("Compiling...");
 
 await Promise.all([
   generateLicenseFile("./package.json", output + "/LICENSES.txt", generateLicenseFileConfig),
@@ -22,6 +21,6 @@ await Promise.all([
     outdir: output,
     target: "bun"
   })
-])
+]);
 
-console.log("Compilation complete!")
+console.log("Compilation complete!");

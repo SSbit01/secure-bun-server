@@ -4,9 +4,8 @@
  * @returns {string}
  */
 export function compressNumber(num) {
-  return num.toString(36)
+  return num.toString(36);
 }
-
 
 /**
  * @function decompressNumber
@@ -14,5 +13,5 @@ export function compressNumber(num) {
  * @returns {number}
  */
 export function decompressNumber(compressedNumber) {
-  return parseInt(compressedNumber, 36)
+  return parseInt(compressedNumber, 36);
 }

@@ -1,1 +1,1 @@
-export const SESSION_MAX_AGE = 1209600  // 2 weeks
+export const SESSION_MAX_AGE = 1209600; // 2 weeks
