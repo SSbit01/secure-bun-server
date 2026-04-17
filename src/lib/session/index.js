@@ -229,16 +229,16 @@ GROUP BY u.id`;
    */
   async isEmailTaken(email) {
     const [result] = await sql`SELECT
-EXISTS(SELECT 1 FROM emails e LEFT JOIN user_emails ue ON e.id=ue.email_id WHERE ue.user_id IS NOT NULL AND e.email=${email}) AS r
+EXISTS(SELECT 1 FROM emails e LEFT JOIN user_emails ue ON e.id=ue.email_id WHERE ue.user_id IS NOT NULL AND e.email=${email})
 FROM users
-WHERE session_id=${this.#id}`;
+WHERE session_id=${this.#id}`.values();
 
     if (!result) {
       this.deleteCookie();
       return true;
     }
 
-    return Boolean(result?.r);
+    return result[0] ?? false;
   }
 
   /**
