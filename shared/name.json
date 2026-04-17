@@ -1,5 +1,0 @@
-{
-  "maxLength": 32,
-  "minLength": 2,
-  "regexDisallowedName": "[\\p{M}\\p{Zl}\\p{Zp}\\p{Ps}\\p{Pe}\\p{Pi}\\p{Pf}\\p{C}]+"
-}
