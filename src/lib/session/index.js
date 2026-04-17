@@ -10,13 +10,6 @@ import { KEK_ID_BYTES, MAX_KMS_STORE_ATTEMPTS } from "#src/lib/kms";
 import kmsSession from "#src/lib/session/kms";
 import sql from "#src/lib/sql";
 
-/**
- * 200ms as default time between requests.
- *
- * @type {number}
- */
-const MINIMUM_DELAY = 200;
-
 const TOKEN_SEPARATOR = ",";
 
 /**
@@ -51,7 +44,7 @@ export async function getSession(cookies) {
   try {
     /**
      * All dates are compressed.
-     * [sessionId: string, dekRotationDate: string, lastFetchDate: string lastValidAccessDate: string]
+     * [sessionId: string, dekRotationDateMs: string, lastFetchDate: string lastValidAccessDateMs: string]
      */
     sessionInfo = (
       await decryptTextSymmetrically(
@@ -66,22 +59,22 @@ export async function getSession(cookies) {
   }
 
   const idString = isBase64UrlIdValid(sessionInfo[0] || "") && sessionInfo[0];
-  const dekRotationDate = decompressNumber(sessionInfo[1] || "");
+  const dekRotationDateMs = decompressNumber(sessionInfo[1] || "");
   const lastFetchDate = decompressNumber(sessionInfo[2] || "");
-  const lastValidAccessDate = decompressNumber(sessionInfo[3] || "");
+  const lastValidAccessDateMs = decompressNumber(sessionInfo[3] || "");
 
   const dateNow = Date.now();
 
   if (
     sessionInfo.length !== 4 ||
     !idString ||
-    !dekRotationDate ||
-    dekRotationDate - dateNow > SESSION_MAX_AGE_MS ||
+    !dekRotationDateMs ||
+    dekRotationDateMs - dateNow > SESSION_MAX_AGE_MS ||
     !lastFetchDate ||
-    !lastValidAccessDate ||
-    lastValidAccessDate > dekRotationDate ||
-    lastFetchDate > lastValidAccessDate ||
-    lastValidAccessDate > dateNow
+    !lastValidAccessDateMs ||
+    lastValidAccessDateMs > dekRotationDateMs ||
+    lastFetchDate > lastValidAccessDateMs ||
+    lastValidAccessDateMs > dateNow
   ) {
     cookies.delete(COOKIE_NAME_SESSION);
 
@@ -106,24 +99,18 @@ export async function getSession(cookies) {
     return;
   }
 
-  const elapsed = Date.now() - lastValidAccessDate;
-
-  if (elapsed < MINIMUM_DELAY) {
-    return;
-  }
-
-  if (elapsed >= SESSION_MAX_AGE_MS) {
+  if ((Date.now() - lastValidAccessDateMs) >= SESSION_MAX_AGE_MS) {
     cookies.delete(COOKIE_NAME_SESSION);
     return;
   }
 
-  return new Session(cookies, idString, dek, dekRotationDate, envelope, lastFetchDate);
+  return new Session(cookies, idString, dek, dekRotationDateMs, envelope, lastFetchDate);
 }
 
 export default class Session {
   #cookies;
   #dek;
-  #dekRotationDate;
+  #dekRotationDateMs;
   #envelope;
   #id;
   #idString;
@@ -133,14 +120,14 @@ export default class Session {
    * @param {Bun.CookieMap} cookies
    * @param {string} idString
    * @param {CryptoKey} [dek]
-   * @param {number} [dekRotationDate]
+   * @param {number} [dekRotationDateMs]
    * @param {string} [envelope]
    * @param {number} [lastFetchDate]
    */
-  constructor(cookies, idString, dek, dekRotationDate, envelope = "", lastFetchDate) {
+  constructor(cookies, idString, dek, dekRotationDateMs, envelope = "", lastFetchDate) {
     this.#cookies = cookies;
     this.#dek = dek;
-    this.#dekRotationDate = dekRotationDate;
+    this.#dekRotationDateMs = dekRotationDateMs;
     this.#envelope = envelope;
     this.#id = Uint8Array.fromBase64(idString, BASE64URL_OPTIONS);
     this.#idString = idString;
@@ -253,27 +240,31 @@ WHERE session_id=${this.#id}`.values();
 
     let kekId = await kmsSession.getCurrentId();
 
-    if (this.#dek && this.#dekRotationDate && this.#dekRotationDate > Date.now() && this.#envelope.startsWith(kekId)) {
+    if (this.#dek && this.#dekRotationDateMs && this.#dekRotationDateMs > Date.now() && this.#envelope.startsWith(kekId)) {
       additionalData = Uint8Array.fromBase64(kekId, BASE64URL_OPTIONS);
     } else {
       let kek = await kmsSession.get(kekId);
+
       if (kek) {
         additionalData = Uint8Array.fromBase64(kekId, BASE64URL_OPTIONS);
       } else {
         let i = 0;
+
         do {
           additionalData = createId(KEK_ID_BYTES);
           kekId = additionalData.toBase64(BASE64URL_OPTIONS);
           kek = await createKek();
           i++;
         } while (!(await kmsSession.store(kekId, kek)) && i < MAX_KMS_STORE_ATTEMPTS);
+
         if (i >= MAX_KMS_STORE_ATTEMPTS) {
           throw new Error("Too many attempts to store a KEK in KMS: SESSION");
         }
       }
+
       this.#dek = await createDek();
       this.#envelope = kekId + new Uint8Array(await wrapKey(this.#dek, kek)).toBase64(BASE64URL_OPTIONS);
-      this.#dekRotationDate = Date.now() + SESSION_MAX_AGE_MS;
+      this.#dekRotationDateMs = Date.now() + 86400000; // Rotate DEK after one day.
     }
 
     const compressedDateNow = compressNumber(Date.now());
@@ -285,7 +276,7 @@ WHERE session_id=${this.#id}`.values();
           this.#dek,
           this.#idString +
             TOKEN_SEPARATOR +
-            compressNumber(this.#dekRotationDate) +
+            compressNumber(this.#dekRotationDateMs) +
             TOKEN_SEPARATOR +
             (this.#lastFetchDate ? compressNumber(this.#lastFetchDate) : compressedDateNow) +
             TOKEN_SEPARATOR +
