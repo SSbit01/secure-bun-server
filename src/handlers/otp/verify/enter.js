@@ -13,11 +13,8 @@ import { blockOtpToken, getOtpTokenList, isOtpValid, OTP_TOKEN_SEPARATOR, setOtp
 import { OTP_ATTEMPTS_BLOCK } from "#src/lib/otp/custom";
 import { ATTEMPTS, CREDENTIAL, decodeOtpToken, EXPIRES, encodeOtpToken, OTP, OTP_BLOCK } from "#src/lib/otp/encode/token";
 import { deleteOtpTokenId, replaceOtpTokenId } from "#src/lib/otp/id";
-
 import kmsOtp from "#src/lib/otp/kms";
-
 import { APP_RES_INIT_200, APP_RES_INIT_204, APP_RES_INIT_403, APP_RES_INIT_DEFAULT_BAD } from "#src/lib/response/app";
-
 import Session from "#src/lib/session";
 import sql from "#src/lib/sql";
 import { msToSeconds } from "#src/lib/time";
@@ -154,22 +151,27 @@ export default async function handleOtpEnterVerification(req) {
        * @type {(CryptoKey|undefined)}
        */
       let kek;
+
       [dek, kek] = await Promise.all([createDek(), kmsOtp.get(currentKekId)]);
+
       if (kek) {
         kekId = currentKekId;
         additionalData = Uint8Array.fromBase64(kekId, BASE64URL_OPTIONS);
         envelope = kekId + new Uint8Array(await wrapKey(dek, kek)).toBase64(BASE64URL_OPTIONS);
       } else {
         let i = 0;
+
         do {
           additionalData = createId(KEK_ID_BYTES);
           kekId = additionalData.toBase64(BASE64URL_OPTIONS);
           kek = await createKek();
           i++;
         } while (!(await kmsOtp.store(kekId, kek)) && i < MAX_KMS_STORE_ATTEMPTS);
+
         if (i >= MAX_KMS_STORE_ATTEMPTS) {
           throw new Error("Too many attempts to store a KEK in KMS: OTP");
         }
+
         envelope = kekId + new Uint8Array(await wrapKey(dek, kek)).toBase64(BASE64URL_OPTIONS);
       }
     }
@@ -242,18 +244,22 @@ WHERE e.email=${email}`;
 
   if (user?.session_id) {
     await new Session(cookies, user.session_id.toBase64(BASE64URL_OPTIONS)).save();
+
     if (user.is_other_email_backup) {
       user.email2 = user.other_email;
     } else if (user.other_email) {
       user.email = user.other_email;
     }
+
     if (!user.display_name) {
       delete user.display_name;
     }
+
     delete user.email_id;
     delete user.other_email;
     delete user.is_other_email_backup;
     delete user.session_id;
+
     return Response.json(user, APP_RES_INIT_200);
   }
 

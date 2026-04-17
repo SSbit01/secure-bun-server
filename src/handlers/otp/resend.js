@@ -137,22 +137,27 @@ export default async function handleOtpResending(req) {
      * @type {(CryptoKey|undefined)}
      */
     let kek;
+
     [dek, kek] = await Promise.all([createDek(), kmsOtp.get(currentKekId)]);
+
     if (kek) {
       kekId = currentKekId;
       additionalData = Uint8Array.fromBase64(kekId, BASE64URL_OPTIONS);
       envelope = kekId + new Uint8Array(await wrapKey(dek, kek)).toBase64(BASE64URL_OPTIONS);
     } else {
       let i = 0;
+
       do {
         additionalData = createId(KEK_ID_BYTES);
         kekId = additionalData.toBase64(BASE64URL_OPTIONS);
         kek = await createKek();
         i++;
       } while (!(await kmsOtp.store(kekId, kek)) && i < MAX_KMS_STORE_ATTEMPTS);
+
       if (i >= MAX_KMS_STORE_ATTEMPTS) {
         throw new Error("Too many attempts to store a KEK in KMS: OTP");
       }
+
       envelope = kekId + new Uint8Array(await wrapKey(dek, kek)).toBase64(BASE64URL_OPTIONS);
     }
   }

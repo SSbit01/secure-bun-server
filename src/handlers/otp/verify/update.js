@@ -11,7 +11,6 @@ import { createKek, wrapKey } from "#src/lib/crypto/symmetric/kek";
 import { KEK_ID_BYTES, MAX_KMS_STORE_ATTEMPTS } from "#src/lib/kms";
 import { blockOtpToken, getOtpTokenList, isOtpValid, OTP_TOKEN_SEPARATOR, setOtpCookie } from "#src/lib/otp";
 import { OTP_ATTEMPTS_BLOCK } from "#src/lib/otp/custom";
-
 import { ATTEMPTS, CREDENTIAL, decodeOtpToken, EXPIRES, encodeOtpToken, OTP, OTP_BLOCK } from "#src/lib/otp/encode/token";
 import { deleteOtpTokenId, replaceOtpTokenId } from "#src/lib/otp/id";
 import kmsOtp from "#src/lib/otp/kms";
@@ -158,7 +157,9 @@ export default async function handleOtpUpdateVerification(req) {
        * @type {(CryptoKey|undefined)}
        */
       let kek;
+
       [dek, kek] = await Promise.all([createDek(), kmsOtp.get(currentKekId)]);
+
       if (kek) {
         kekId = currentKekId;
         additionalData = Uint8Array.fromBase64(kekId, BASE64URL_OPTIONS);
@@ -171,9 +172,11 @@ export default async function handleOtpUpdateVerification(req) {
           kek = await createKek();
           i++;
         } while (!(await kmsOtp.store(kekId, kek)) && i < MAX_KMS_STORE_ATTEMPTS);
+
         if (i >= MAX_KMS_STORE_ATTEMPTS) {
           throw new Error("Too many attempts to store a KEK in KMS: OTP");
         }
+
         envelope = kekId + new Uint8Array(await wrapKey(dek, kek)).toBase64(BASE64URL_OPTIONS);
       }
     }

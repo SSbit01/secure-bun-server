@@ -1,6 +1,5 @@
 import { isValid as isEmailValid } from "mailchecker";
 import normalizeEmail from "validator/es/lib/normalizeEmail";
-
 import generateOtpCreationResponse from "#src/lib/otp/response/create";
 import { APP_RES_INIT_DEFAULT_BAD } from "#src/lib/response/app";
 import { getSession } from "#src/lib/session";

@@ -1,5 +1,4 @@
 import otpAttributes from "#shared/otp.json";
-
 import { BASE64URL_OPTIONS } from "#src/lib/base64";
 import { compressNumber } from "#src/lib/compression/number";
 import { ENVELOPE_ENCRYPTION_WRAP_LENGTH, KEK_ID_LENGTH, OTP_RESEND_BLOCK_MS } from "#src/lib/computed";
@@ -10,9 +9,7 @@ import { createKek, wrapKey } from "#src/lib/crypto/symmetric/kek";
 import { KEK_ID_BYTES, MAX_KMS_STORE_ATTEMPTS } from "#src/lib/kms";
 import { getOtpTokenList, OTP_TOKEN_SEPARATOR, setOtpCookie } from "#src/lib/otp";
 import { createOtp } from "#src/lib/otp/custom";
-
 import { CREDENTIAL, createEncodedOtpToken, decodeOtpToken, EXPIRES, encodeOtpToken, encodeOtpTokenData } from "#src/lib/otp/encode/token";
-
 import { createOtpTokenListId, deleteOtpTokenId, updateOtpTokenExpires } from "#src/lib/otp/id";
 import kmsOtp from "#src/lib/otp/kms";
 import sendOtp from "#src/lib/otp/send";
@@ -196,22 +193,27 @@ export default async function generateOtpCreationResponse(cookies, credential) {
      * @type {(CryptoKey|undefined)}
      */
     let kek;
+
     [dek, kek] = await Promise.all([createDek(), kmsOtp.get(currentKekId)]);
+
     if (kek) {
       kekId = currentKekId;
       additionalData = Uint8Array.fromBase64(kekId, BASE64URL_OPTIONS);
       envelope = kekId + new Uint8Array(await wrapKey(dek, kek)).toBase64(BASE64URL_OPTIONS);
     } else {
       let i = 0;
+
       do {
         additionalData = createId(KEK_ID_BYTES);
         kekId = additionalData.toBase64(BASE64URL_OPTIONS);
         kek = await createKek();
         i++;
       } while (!(await kmsOtp.store(kekId, kek)) && i < MAX_KMS_STORE_ATTEMPTS);
+
       if (i >= MAX_KMS_STORE_ATTEMPTS) {
         throw new Error("Too many attempts to store a KEK in KMS: OTP");
       }
+
       envelope = kekId + new Uint8Array(await wrapKey(dek, kek)).toBase64(BASE64URL_OPTIONS);
     }
   }
@@ -224,14 +226,18 @@ export default async function generateOtpCreationResponse(cookies, credential) {
      * Verify OTP Token List ID before sending the OTP.
      */
     expires = await updateOtpTokenExpires(id, expires);
+
     if (!expires) {
       cookies.delete(COOKIE_NAME_OTP);
       return new Response(null, APP_RES_INIT_DEFAULT_BAD);
     }
+
     const otp = createOtp();
+
     if (!(await sendOtp(credential, otp))) {
       return new Response(null, APP_RES_INIT_DEFAULT_BAD);
     }
+
     const resendBlock = Date.now() + OTP_RESEND_BLOCK_MS;
     currentEncodedOtpToken = createEncodedOtpToken(credential, expires, otp, resendBlock);
     newEncodedOtpTokenList.push(currentEncodedOtpToken);
