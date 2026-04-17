@@ -321,7 +321,7 @@ EXISTS(SELECT 1 FROM user_emails ue2 WHERE ue2.user_id=u.id AND ue2.is_backup=TR
     }
 
     if (user.display_name !== newDisplayName) {
-      await sql`UPDATE users SET display_name=${newDisplayName} WHERE id=${!user.id}`;
+      await sql`UPDATE users SET display_name=${newDisplayName} WHERE id=${user.id}`;
     }
 
     return true;
