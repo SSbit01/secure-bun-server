@@ -106,15 +106,18 @@ export default async function handleOtpEnterVerification(req) {
 
   for (const encodedOtpToken of encodedOtpTokenList) {
     const otpToken = decodeOtpToken(encodedOtpToken);
+
     if (!otpToken) {
       cookies.delete(COOKIE_NAME_OTP);
       await Promise.allSettled([deleteOtpTokenId(id), kmsOtp.rotate(kekId)]);
       return new Response(null, APP_RES_INIT_DEFAULT_BAD);
     }
+
     if (dateNow < otpToken[EXPIRES]) {
       if (expires < otpToken[EXPIRES]) {
         expires = otpToken[EXPIRES];
       }
+
       if (!currentOtpToken && email === otpToken[CREDENTIAL]) {
         currentOtpToken = otpToken;
       } else {
