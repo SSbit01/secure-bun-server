@@ -337,9 +337,6 @@ EXISTS(SELECT 1 FROM user_emails ue2 WHERE ue2.user_id=u.id AND ue2.is_backup=TR
   }
 
   /**
-   * It works with concurrent requests.
-   * If the previous email gets an invitation during this request, that email address doesn't change.
-   *
    * @async
    * @function updateEmail
    * @param {string} newEmail
@@ -351,12 +348,13 @@ EXISTS(SELECT 1 FROM user_emails ue2 WHERE ue2.user_id=u.id AND ue2.is_backup=TR
      * Old email address will be deleted by the `delete_expired_rows` scheduler, see `setup.sql`.
      */
 
-    const [data] = await sql`SELECT u.id,e.id AS email_id
+    const [data] = await sql`SELECT u.id,e.id AS email_id,ue.email_id IS NULL AS free
 FROM users u
 LEFT JOIN emails e ON e.email=${newEmail}
+LEFT JOIN user_emails ue ON e.id=ue.email_id
 WHERE u.session_id=${this.#id}`;
 
-    if (!data) {
+    if (!data || !data.free) {
       return false;
     }
 
