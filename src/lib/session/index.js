@@ -99,7 +99,7 @@ export async function getSession(cookies) {
     return;
   }
 
-  if ((Date.now() - lastValidAccessDateMs) >= SESSION_MAX_AGE_MS) {
+  if (Date.now() - lastValidAccessDateMs >= SESSION_MAX_AGE_MS) {
     cookies.delete(COOKIE_NAME_SESSION);
     return;
   }
