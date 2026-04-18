@@ -223,7 +223,7 @@ GROUP BY u.id`;
    * @async
    * @function isEmailTaken
    * @param {string} email
-   * @returns {Promise<boolean|undefined>}
+   * @returns {Promise<boolean|undefined>} `undefined` means the session is invalid.
    */
   async isEmailTaken(email) {
     const [result] = await sql`SELECT
