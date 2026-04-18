@@ -28,7 +28,19 @@ export default async function handleOtpUpdateCreation(req) {
 
   const session = await getSession(req.cookies);
 
-  if (!session || (await session.isEmailTaken(email))) {
+  if (!session) {
+    return new Response(null, APP_RES_INIT_DEFAULT_BAD);
+  }
+
+  const emailTaken = await session.isEmailTaken(email);
+
+  if (emailTaken !== false) {
+    if (emailTaken) {
+      await session.save();
+    } else {
+      session.deleteCookie();
+    }
+
     return new Response(null, APP_RES_INIT_DEFAULT_BAD);
   }
 

@@ -222,17 +222,16 @@ GROUP BY u.id`;
    * @async
    * @function isEmailTaken
    * @param {string} email
-   * @returns {Promise<boolean>}
+   * @returns {Promise<boolean|undefined>}
    */
   async isEmailTaken(email) {
     const [result] = await sql`SELECT
-EXISTS(SELECT 1 FROM emails e LEFT JOIN user_emails ue ON e.id=ue.email_id WHERE ue.user_id IS NOT NULL AND e.email=${email})
+EXISTS(SELECT 1 FROM emails e INNER JOIN user_emails ue ON e.id=ue.email_id WHERE e.email=${email})
 FROM users
 WHERE session_id=${this.#id}`.values();
 
     if (!result) {
-      this.deleteCookie();
-      return true;
+      return;
     }
 
     return result[0] ?? false;
