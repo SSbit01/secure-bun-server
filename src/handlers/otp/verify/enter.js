@@ -273,19 +273,28 @@ WHERE e.email=${email}`;
 
   await sql.begin(async tx => {
     let i = 0;
+
     /**
      * @type {(number|bigint)}
      */
     let userId;
+
     do {
       sessionId = createId();
       userId = (await tx`INSERT IGNORE INTO users (session_id) VALUES (${sessionId})`).lastInsertRowid;
       i++;
     } while (userId == null && i < 2);
+
     if (!userId) {
       throw new Error("Too many attempts to create a user.");
     }
+
     const emailId = user?.email_id ?? (await tx`INSERT INTO emails (email) VALUES (${email})`).lastInsertRowid;
+
+    if (emailId == null) {
+      throw new Error("The email address was not saved in the database: " + email);
+    }
+
     await tx`INSERT INTO user_emails (is_backup,email_id,user_id) VALUES (FALSE,${emailId},${userId})`;
   });
 
