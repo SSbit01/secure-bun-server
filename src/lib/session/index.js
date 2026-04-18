@@ -391,11 +391,19 @@ WHERE u.session_id=${this.#id}`;
     await sql.begin(async tx => {
       data.email_id = (await tx`INSERT INTO emails (email) VALUES (${newEmail})`).lastInsertRowid;
 
-      if (currentUserEmail) {
-        result = (await tx`UPDATE user_emails SET email_id=${data.email_id} WHERE id=${currentUserEmail.id}`).affectedRows > 0;
+      if (data.email_id == null) {
+        console.error(
+          "The email address was not saved in the database while trying to update an existing one: ",
+          newEmail
+        )
+      } else if (currentUserEmail) {
+        result = (
+          await tx`UPDATE user_emails SET email_id=${data.email_id} WHERE id=${currentUserEmail.id}`
+        ).affectedRows > 0;
       } else {
-        await tx`INSERT INTO user_emails (is_backup,email_id,user_id) VALUES (${backup},${data.email_id},${data.id})`;
-        result = true;
+        result = (
+          await tx`INSERT INTO user_emails (is_backup,email_id,user_id) VALUES (${backup},${data.email_id},${data.id})`
+        ).affectedRows > 0;
       }
     });
 
