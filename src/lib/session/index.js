@@ -372,15 +372,15 @@ WHERE u.session_id=${this.#id}`;
     const [currentUserEmail] = await sql`SELECT id,email_id FROM user_emails WHERE user_id=${data.id} AND is_backup=${backup}`
 
     if (data.email_id != null) {
-      /**
-       * In case that multiple concurrent requests from the same user try to set the same email,
-       * `currentUserEmail.email_id` might have changed.
-       */
-      if (data.email_id === currentUserEmail?.email_id) {
-        return true;
-      }
-
       if (currentUserEmail) {
+        /**
+         * In case that multiple concurrent requests from the same user try to set the same email,
+         * `currentUserEmail.email_id` might have changed.
+         */
+        if (data.email_id === currentUserEmail.email_id) {
+          return true;
+        }
+
         return (await sql`UPDATE user_emails SET email_id=${data.email_id} WHERE id=${currentUserEmail.id}`).affectedRows > 0;
       }
 
