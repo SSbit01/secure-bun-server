@@ -349,7 +349,7 @@ EXISTS(SELECT 1 FROM user_emails ue2 WHERE ue2.user_id=u.id AND ue2.is_backup=TR
      * Old email address will be deleted by the `delete_expired_rows` scheduler, see `setup.sql`.
      */
 
-    const [data] = await sql`SELECT u.id,ue.is_backup,e.id AS email_id,ue.id AS user_email_id,ue.user_id=u.id AS owned
+    const [data] = await sql`SELECT u.id,ue.is_backup,e.id AS email_id,ue.user_id=u.id AS owned
 FROM users u
 LEFT JOIN emails e ON e.email=${newEmail}
 LEFT JOIN user_emails ue ON e.id=ue.email_id
@@ -361,33 +361,45 @@ WHERE u.session_id=${this.#id}`;
 
     if (
       data.owned &&
-      (data.is_backup === backup || (await sql`UPDATE user_emails SET is_backup=${backup} WHERE id=${data.user_email_id}`).affectedRows)
+      (
+        data.is_backup === backup ||
+        (await sql`UPDATE user_emails SET is_backup=!is_backup WHERE user_id=${data.id}`).affectedRows
+      )
     ) {
       return true;
     }
 
-    if (data.email_id != null) {
-      await sql`INSERT INTO user_emails (email_id,user_id,is_backup) VALUES
-(${data.email_id},${data.id},${backup})
-ON DUPLICATE KEY UPDATE email_id=${data.email_id}`;
+    const [currentUserEmail] = await sql`SELECT id,email_id FROM user_emails WHERE user_id=${data.id} AND is_backup=${backup}`
 
-      return true;
+    if (data.email_id != null) {
+      /**
+       * In case that multiple concurrent requests from the same user try to set the same email,
+       * `currentUserEmail.email_id` might have changed.
+       */
+      if (data.email_id === currentUserEmail?.email_id) {
+        return true;
+      }
+
+      if (currentUserEmail) {
+        return (await sql`UPDATE user_emails SET email_id=${data.email_id} WHERE id=${currentUserEmail.id}`).affectedRows > 0;
+      }
+
+      await sql`INSERT INTO user_emails (is_backup,email_id,user_id) VALUES (${backup},${data.email_id},${data.id})`
+
+      return true
     }
 
-    /**
-     * @type {boolean}
-     */
     let result = false;
 
     await sql.begin(async tx => {
       data.email_id = (await tx`INSERT INTO emails (email) VALUES (${newEmail})`).lastInsertRowid;
 
-      result =
-        (
-          await tx`INSERT INTO user_emails (email_id,user_id,is_backup) VALUES
-(${data.email_id},${data.id},${backup})
-ON DUPLICATE KEY UPDATE email_id=${data.email_id}`
-        ).affectedRows > 0;
+      if (currentUserEmail) {
+        result = (await tx`UPDATE user_emails SET email_id=${data.email_id} WHERE id=${currentUserEmail.id}`).affectedRows > 0;
+      } else {
+        await tx`INSERT INTO user_emails (is_backup,email_id,user_id) VALUES (${backup},${data.email_id},${data.id})`;
+        result = true;
+      }
     });
 
     return result;
