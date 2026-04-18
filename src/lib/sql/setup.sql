@@ -26,8 +26,13 @@ CREATE TABLE IF NOT EXISTS emails (
 );
 
 CREATE TABLE IF NOT EXISTS user_emails (
-  email_id BIGINT UNSIGNED PRIMARY KEY,
+  /**
+   * A dedicated primary key ID column is set over `email_id`
+   * to avoid the performance penalties associated with updating primary key values.
+   */
+  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
   is_backup BOOLEAN NOT NULL DEFAULT FALSE,
+  email_id BIGINT UNSIGNED NOT NULL UNIQUE,
   user_id BIGINT UNSIGNED NOT NULL,
   updated_at DATETIME ON UPDATE CURRENT_TIMESTAMP,
   CONSTRAINT uk_user_emails_user_id_is_backup UNIQUE (user_id, is_backup),

@@ -349,17 +349,24 @@ EXISTS(SELECT 1 FROM user_emails ue2 WHERE ue2.user_id=u.id AND ue2.is_backup=TR
      * Old email address will be deleted by the `delete_expired_rows` scheduler, see `setup.sql`.
      */
 
-    const [data] = await sql`SELECT u.id,e.id AS email_id,ue.email_id IS NULL AS free
+    const [data] = await sql`SELECT u.id,ue.is_backup,e.id AS email_id,ue.id AS user_email_id,ue.user_id=u.id AS owned
 FROM users u
 LEFT JOIN emails e ON e.email=${newEmail}
 LEFT JOIN user_emails ue ON e.id=ue.email_id
 WHERE u.session_id=${this.#id}`;
 
-    if (!data || !data.free) {
+    if (!data || data.owned === false) {
       return false;
     }
 
-    if (data.email_id) {
+    if (
+      data.owned &&
+      (data.is_backup === backup || (await sql`UPDATE user_emails SET is_backup=${backup} WHERE id=${data.user_email_id}`).affectedRows)
+    ) {
+      return true;
+    }
+
+    if (data.email_id != null) {
       await sql`INSERT INTO user_emails (email_id,user_id,is_backup) VALUES
 (${data.email_id},${data.id},${backup})
 ON DUPLICATE KEY UPDATE email_id=${data.email_id}`;
