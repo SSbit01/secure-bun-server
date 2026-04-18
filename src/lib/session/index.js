@@ -79,21 +79,32 @@ export async function getSession(cookies) {
     cookies.delete(COOKIE_NAME_SESSION);
 
     /**
-     * Delete key too.
+     * Rotate the KEK.
      */
-    const promises = [kmsSession.rotate(kekId)];
-
-    if (idString) {
-      promises.push(
-        sql`UPDATE users SET session_id=RANDOM_BYTES(18) WHERE session_id=${Uint8Array.fromBase64(idString, BASE64URL_OPTIONS)}`
-      );
+    try {
+      await kmsSession.rotate(kekId);
+    } catch {
+      console.error("Key rotation failed:", kekId);
     }
 
-    // @ts-expect-error: promises has already keyRotation
-    const [{ status: keyRotationStatus }] = await Promise.allSettled(promises);
+    if (idString) {
+      await sql.begin(async tx => {
+        const { affectedRows } =
+          await tx`UPDATE users SET session_id=RANDOM_BYTES(18) WHERE session_id=${Uint8Array.fromBase64(idString, BASE64URL_OPTIONS)}`;
 
-    if (keyRotationStatus === "rejected") {
-      console.warn("Key rotation failed: " + kekId);
+        if (affectedRows > 1) {
+          throw new Error(
+            "While trying to rotate a compromised `session_id`, multiple users were affected. That should never happen. `session_id`: " +
+              idString
+          );
+        }
+
+        if (affectedRows) {
+          console.log("Compromised `session_id` successfully rotated.");
+        } else {
+          console.log("Compromised `session_id` does not exist.");
+        }
+      });
     }
 
     return;
