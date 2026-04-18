@@ -157,6 +157,7 @@ export default class Session {
    * @returns {Promise<boolean>}
    */
   async deleteAccount() {
+    this.deleteCookie();
     return (await sql`DELETE FROM users WHERE session_id=${this.#id}`).affectedRows > 0;
   }
 
