@@ -34,6 +34,7 @@ CREATE TABLE IF NOT EXISTS user_emails (
   is_backup BOOLEAN NOT NULL DEFAULT FALSE,
   email_id BIGINT UNSIGNED NOT NULL UNIQUE,
   user_id BIGINT UNSIGNED NOT NULL,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at DATETIME ON UPDATE CURRENT_TIMESTAMP,
   CONSTRAINT uk_user_emails_user_id_is_backup UNIQUE (user_id, is_backup),
   CONSTRAINT fk_user_emails_emails FOREIGN KEY (email_id) REFERENCES emails(id) ON DELETE CASCADE,
