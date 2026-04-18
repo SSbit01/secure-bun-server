@@ -382,8 +382,8 @@ WHERE u.session_id=${this.#id}`;
       }
 
       return (
-        await sql`INSERT INTO user_emails (is_backup,email_id,user_id) VALUES (${backup},${data.email_id},${data.id})`
-      ).affectedRows > 0;
+        (await sql`INSERT INTO user_emails (is_backup,email_id,user_id) VALUES (${backup},${data.email_id},${data.id})`).affectedRows > 0
+      );
     }
 
     let result = false;
@@ -392,18 +392,12 @@ WHERE u.session_id=${this.#id}`;
       data.email_id = (await tx`INSERT INTO emails (email) VALUES (${newEmail})`).lastInsertRowid;
 
       if (data.email_id == null) {
-        console.error(
-          "The email address was not saved in the database while trying to update an existing one: ",
-          newEmail
-        )
+        console.error("The email address was not saved in the database while trying to update an existing one: ", newEmail);
       } else if (currentUserEmail) {
-        result = (
-          await tx`UPDATE user_emails SET email_id=${data.email_id} WHERE id=${currentUserEmail.id}`
-        ).affectedRows > 0;
+        result = (await tx`UPDATE user_emails SET email_id=${data.email_id} WHERE id=${currentUserEmail.id}`).affectedRows > 0;
       } else {
-        result = (
-          await tx`INSERT INTO user_emails (is_backup,email_id,user_id) VALUES (${backup},${data.email_id},${data.id})`
-        ).affectedRows > 0;
+        result =
+          (await tx`INSERT INTO user_emails (is_backup,email_id,user_id) VALUES (${backup},${data.email_id},${data.id})`).affectedRows > 0;
       }
     });
 

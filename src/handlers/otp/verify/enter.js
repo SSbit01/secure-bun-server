@@ -292,9 +292,7 @@ WHERE e.email=${email}`;
     const emailId = user?.email_id ?? (await tx`INSERT INTO emails (email) VALUES (${email})`).lastInsertRowid;
 
     if (emailId == null) {
-      throw new Error(
-        "The email address was not saved in the database while trying to register a new user: " + email
-      );
+      throw new Error("The email address was not saved in the database while trying to register a new user: " + email);
     }
 
     await tx`INSERT INTO user_emails (is_backup,email_id,user_id) VALUES (FALSE,${emailId},${userId})`;
