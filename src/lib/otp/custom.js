@@ -43,11 +43,11 @@ export const OTP_MAX_ATTEMPTS = 3;
 /**
  * When sending an OTP, you may want to ask users to wait a few seconds until they have the option to resend another OTP.
  *
- * - It is recommended to set it to 30 seconds.
+ * - It is recommended to set it to 40 seconds.
  *
  * @type {number}
  */
-export const OTP_RESEND_BLOCK_SECONDS = test ? 3 : 30;
+export const OTP_RESEND_BLOCK_SECONDS = test ? 3 : 40;
 
 /**
  * This implenetation creates an OTP with lowercase letters and numbers.
