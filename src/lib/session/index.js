@@ -361,15 +361,12 @@ WHERE u.session_id=${this.#id}`;
 
     if (
       data.owned &&
-      (
-        data.is_backup === backup ||
-        (await sql`UPDATE user_emails SET is_backup=!is_backup WHERE user_id=${data.id}`).affectedRows
-      )
+      (data.is_backup === backup || (await sql`UPDATE user_emails SET is_backup=!is_backup WHERE user_id=${data.id}`).affectedRows)
     ) {
       return true;
     }
 
-    const [currentUserEmail] = await sql`SELECT id,email_id FROM user_emails WHERE user_id=${data.id} AND is_backup=${backup}`
+    const [currentUserEmail] = await sql`SELECT id,email_id FROM user_emails WHERE user_id=${data.id} AND is_backup=${backup}`;
 
     if (data.email_id != null) {
       if (currentUserEmail) {
@@ -384,9 +381,9 @@ WHERE u.session_id=${this.#id}`;
         return (await sql`UPDATE user_emails SET email_id=${data.email_id} WHERE id=${currentUserEmail.id}`).affectedRows > 0;
       }
 
-      await sql`INSERT INTO user_emails (is_backup,email_id,user_id) VALUES (${backup},${data.email_id},${data.id})`
+      await sql`INSERT INTO user_emails (is_backup,email_id,user_id) VALUES (${backup},${data.email_id},${data.id})`;
 
-      return true
+      return true;
     }
 
     let result = false;
