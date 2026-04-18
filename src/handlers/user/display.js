@@ -1,4 +1,4 @@
-import { isDisplayNameValid, normalizeDisplayName } from "#src/lib/display/name";
+import { isDisplayNameLengthValid, normalizeDisplayName } from "#src/lib/display/name";
 import { APP_RES_INIT_204, APP_RES_INIT_DEFAULT_BAD } from "#src/lib/response/app";
 import { getSession } from "#src/lib/session";
 
@@ -11,7 +11,7 @@ import { getSession } from "#src/lib/session";
 export default async function handleUserDisplayNameUpdate(req) {
   const displayName = normalizeDisplayName(await req.text());
 
-  if (!isDisplayNameValid(displayName)) {
+  if (!isDisplayNameLengthValid(displayName)) {
     return new Response(null, APP_RES_INIT_DEFAULT_BAD);
   }
 
