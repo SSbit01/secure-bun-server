@@ -381,9 +381,9 @@ WHERE u.session_id=${this.#id}`;
         return (await sql`UPDATE user_emails SET email_id=${data.email_id} WHERE id=${currentUserEmail.id}`).affectedRows > 0;
       }
 
-      await sql`INSERT INTO user_emails (is_backup,email_id,user_id) VALUES (${backup},${data.email_id},${data.id})`;
-
-      return true;
+      return (
+        await sql`INSERT INTO user_emails (is_backup,email_id,user_id) VALUES (${backup},${data.email_id},${data.id})`
+      ).affectedRows > 0;
     }
 
     let result = false;
