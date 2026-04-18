@@ -94,15 +94,14 @@ export async function getSession(cookies) {
 
         if (affectedRows > 1) {
           throw new Error(
-            "While trying to rotate a compromised `session_id`, multiple users were affected. That should never happen. `session_id`: " +
-              idString
+            `While trying to rotate a compromised session_id (${idString}), ${affectedRows} users were affected. That should not happen.`
           );
         }
 
         if (affectedRows) {
-          console.log("Compromised `session_id` successfully rotated.");
+          console.log("Compromised session_id successfully rotated.");
         } else {
-          console.log("Compromised `session_id` does not exist.");
+          console.log("Compromised session_id does not exist.");
         }
       });
     }
