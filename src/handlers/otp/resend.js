@@ -19,7 +19,7 @@ import { APP_RES_INIT_200, APP_RES_INIT_409, APP_RES_INIT_DEFAULT_BAD } from "#s
 import { msToSeconds } from "#src/lib/time";
 
 /**
- * @import { OtpToken } from "#src/lib/otp/encode/token"
+ * @import {OtpToken} from "#src/lib/otp/encode/token"
  */
 
 /**

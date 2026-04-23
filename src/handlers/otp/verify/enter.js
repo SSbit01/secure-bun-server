@@ -20,7 +20,7 @@ import sql from "#src/lib/sql";
 import { msToSeconds } from "#src/lib/time";
 
 /**
- * @import { OtpToken } from "#src/lib/otp/encode/token"
+ * @import {OtpToken} from "#src/lib/otp/encode/token"
  */
 
 /**
