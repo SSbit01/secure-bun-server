@@ -54,9 +54,9 @@ export const OTP_RESEND_BLOCK_SECONDS = test ? 3 : 40;
  *
  * - The OTP length with this implementation can be up to 11 characters.
  *
- * @function createOtp
+ * @function generateOtp
  */
-export function createOtp() {
+export function generateOtp() {
   return (crypto.getRandomValues(new BigUint64Array(1))[0]?.toString(36).substring(0, otpAttributes.length) ?? "").padStart(
     otpAttributes.length,
     "0"

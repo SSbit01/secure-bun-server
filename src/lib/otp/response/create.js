@@ -3,28 +3,28 @@ import { BASE64URL_OPTIONS } from "#src/lib/base64";
 import { compressNumber } from "#src/lib/compression/number";
 import { ENVELOPE_ENCRYPTION_WRAP_LENGTH, KEK_ID_LENGTH, OTP_RESEND_BLOCK_MS } from "#src/lib/computed";
 import { COOKIE_NAME_OTP } from "#src/lib/cookie";
-import { createId } from "#src/lib/crypto/id";
 import { createDek, encryptTextSymmetrically } from "#src/lib/crypto/symmetric/dek";
 import { createKek, wrapKey } from "#src/lib/crypto/symmetric/kek";
+import { generateRandomId } from "#src/lib/id";
 import { KEK_ID_BYTES, MAX_KMS_STORE_ATTEMPTS } from "#src/lib/kms";
 import { getOtpTokenList, OTP_TOKEN_SEPARATOR, setOtpCookie } from "#src/lib/otp";
-import { createOtp } from "#src/lib/otp/custom";
+import { generateOtp } from "#src/lib/otp/custom";
 import { CREDENTIAL, createEncodedOtpToken, decodeOtpToken, EXPIRES, encodeOtpToken, encodeOtpTokenData } from "#src/lib/otp/encode/token";
-import { createOtpTokenListId, deleteOtpTokenId, updateOtpTokenExpires } from "#src/lib/otp/id";
+import { generateOtpTokenListId, deleteOtpTokenId, updateOtpTokenExpires, verifyOtpTokenId } from "#src/lib/otp/id";
 import kmsOtp from "#src/lib/otp/kms";
 import sendOtp from "#src/lib/otp/send";
-import { APP_RES_INIT_200, APP_RES_INIT_DEFAULT_BAD } from "#src/lib/response/app";
+import { APP_RES_INIT_200, APP_RES_INIT_409, APP_RES_INIT_DEFAULT_BAD } from "#src/lib/response/app";
 import { msToSeconds } from "#src/lib/time";
 
 /**
  * @async
- * @function createOtpTokenListCreationResponse
+ * @function generateOtpTokenListCreationResponse
  * @param {Bun.CookieMap} cookies
  * @param {string} credential
  * @return {Promise<Response>}
  */
-async function createOtpTokenListCreationResponse(cookies, credential) {
-  const otp = createOtp();
+async function generateOtpTokenListCreationResponse(cookies, credential) {
+  const otp = generateOtp();
 
   if (!(await sendOtp(credential, otp))) {
     return new Response(null, APP_RES_INIT_DEFAULT_BAD);
@@ -51,7 +51,7 @@ async function createOtpTokenListCreationResponse(cookies, credential) {
   } else {
     let i = 0;
     do {
-      additionalData = createId(KEK_ID_BYTES);
+      additionalData = generateRandomId(KEK_ID_BYTES);
       kekId = additionalData.toBase64(BASE64URL_OPTIONS);
       kek = await createKek();
       i++;
@@ -63,9 +63,7 @@ async function createOtpTokenListCreationResponse(cookies, credential) {
 
   const dek = await createDek();
   const wrappedDekString = new Uint8Array(await wrapKey(dek, kek)).toBase64(BASE64URL_OPTIONS);
-
-  const [id, expires] = await createOtpTokenListId();
-
+  const [id, expires] = await generateOtpTokenListId();
   const expiresSeconds = msToSeconds(expires, Math.trunc);
   const resendBlock = Date.now() + OTP_RESEND_BLOCK_MS;
 
@@ -95,7 +93,7 @@ export default async function generateOtpCreationResponse(cookies, credential) {
   const otpData = cookies.get(COOKIE_NAME_OTP)?.trim();
 
   if (!otpData) {
-    return await createOtpTokenListCreationResponse(cookies, credential);
+    return await generateOtpTokenListCreationResponse(cookies, credential);
   }
 
   let kekId = otpData.substring(0, KEK_ID_LENGTH);
@@ -103,7 +101,7 @@ export default async function generateOtpCreationResponse(cookies, credential) {
   let dek = await kmsOtp.getDek(kekId, otpData.substring(KEK_ID_LENGTH, ENVELOPE_ENCRYPTION_WRAP_LENGTH));
 
   if (!dek) {
-    return await createOtpTokenListCreationResponse(cookies, credential);
+    return await generateOtpTokenListCreationResponse(cookies, credential);
   }
 
   let additionalData = Uint8Array.fromBase64(kekId, BASE64URL_OPTIONS);
@@ -111,7 +109,7 @@ export default async function generateOtpCreationResponse(cookies, credential) {
   const encodedOtpTokenList = await getOtpTokenList(dek, otpData.substring(ENVELOPE_ENCRYPTION_WRAP_LENGTH), additionalData);
 
   if (!encodedOtpTokenList) {
-    return await createOtpTokenListCreationResponse(cookies, credential);
+    return await generateOtpTokenListCreationResponse(cookies, credential);
   }
 
   const id = encodedOtpTokenList.pop();
@@ -169,7 +167,7 @@ export default async function generateOtpCreationResponse(cookies, credential) {
 
   if (!expires) {
     // All OTP tokens have expired, create a new list.
-    return await createOtpTokenListCreationResponse(cookies, credential);
+    return await generateOtpTokenListCreationResponse(cookies, credential);
   }
 
   /**
@@ -204,7 +202,7 @@ export default async function generateOtpCreationResponse(cookies, credential) {
       let i = 0;
 
       do {
-        additionalData = createId(KEK_ID_BYTES);
+        additionalData = generateRandomId(KEK_ID_BYTES);
         kekId = additionalData.toBase64(BASE64URL_OPTIONS);
         kek = await createKek();
         i++;
@@ -222,25 +220,36 @@ export default async function generateOtpCreationResponse(cookies, credential) {
     newEncodedOtpTokenList.push(currentEncodedOtpToken);
   } else {
     /**
-     * `updateOtpTokenExpires` is used to verify too.
      * Verify OTP Token List ID before sending the OTP.
      */
-    expires = await updateOtpTokenExpires(id, expires);
-
-    if (!expires) {
+    if (!(await verifyOtpTokenId(id, expires))) {
       cookies.delete(COOKIE_NAME_OTP);
       return new Response(null, APP_RES_INIT_DEFAULT_BAD);
     }
 
-    const otp = createOtp();
+    const otp = generateOtp();
 
     if (!(await sendOtp(credential, otp))) {
       return new Response(null, APP_RES_INIT_DEFAULT_BAD);
     }
 
+    /**
+     * `updateOtpTokenExpires` is used to verify too.
+     * It is set after `sendOtp()` because it takes some time.
+     */
+    expires = await updateOtpTokenExpires(id, expires);
+
+    if (!expires) {
+      cookies.delete(COOKIE_NAME_OTP);
+      return new Response(null, APP_RES_INIT_409);
+    }
+
     const resendBlock = Date.now() + OTP_RESEND_BLOCK_MS;
+
     currentEncodedOtpToken = createEncodedOtpToken(credential, expires, otp, resendBlock);
+
     newEncodedOtpTokenList.push(currentEncodedOtpToken);
+
     currentEncodedOtpTokenData =
       compressNumber(msToSeconds(expires, Math.trunc)) + "," + compressNumber(msToSeconds(resendBlock, Math.ceil));
   }

@@ -3,9 +3,9 @@ import { compressNumber, decompressNumber } from "#src/lib/compression/number";
 import { ENVELOPE_ENCRYPTION_WRAP_LENGTH, KEK_ID_LENGTH, SESSION_MAX_AGE_MS } from "#src/lib/computed";
 import { COOKIE_NAME_SESSION } from "#src/lib/cookie";
 import { COOKIE_OPTIONS_SESSION } from "#src/lib/cookie/options";
-import { createId, isBase64UrlIdValid } from "#src/lib/crypto/id";
 import { createDek, decryptTextSymmetrically, encryptTextSymmetrically } from "#src/lib/crypto/symmetric/dek";
 import { createKek, wrapKey } from "#src/lib/crypto/symmetric/kek";
+import { generateRandomId, isBase64UrlIdValid } from "#src/lib/id";
 import { KEK_ID_BYTES, MAX_KMS_STORE_ATTEMPTS } from "#src/lib/kms";
 import kmsSession from "#src/lib/session/kms";
 import sql from "#src/lib/sql";
@@ -261,7 +261,7 @@ WHERE session_id=${this.#id}`.values();
         let i = 0;
 
         do {
-          additionalData = createId(KEK_ID_BYTES);
+          additionalData = generateRandomId(KEK_ID_BYTES);
           kekId = additionalData.toBase64(BASE64URL_OPTIONS);
           kek = await createKek();
           i++;

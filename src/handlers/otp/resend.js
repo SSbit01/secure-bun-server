@@ -5,17 +5,17 @@ import { BASE64URL_OPTIONS } from "#src/lib/base64";
 import { compressNumber } from "#src/lib/compression/number";
 import { ENVELOPE_ENCRYPTION_WRAP_LENGTH, KEK_ID_LENGTH } from "#src/lib/computed";
 import { COOKIE_NAME_OTP } from "#src/lib/cookie";
-import { createId } from "#src/lib/crypto/id";
 import { createDek, encryptTextSymmetrically } from "#src/lib/crypto/symmetric/dek";
 import { createKek, wrapKey } from "#src/lib/crypto/symmetric/kek";
+import { generateRandomId } from "#src/lib/id";
 import { KEK_ID_BYTES, MAX_KMS_STORE_ATTEMPTS } from "#src/lib/kms";
 import { blockOtpToken, getOtpTokenList, OTP_TOKEN_SEPARATOR, setOtpCookie } from "#src/lib/otp";
-import { createOtp } from "#src/lib/otp/custom";
+import { generateOtp } from "#src/lib/otp/custom";
 import { CREDENTIAL, decodeOtpToken, EXPIRES, encodeOtpToken, OTP, RESEND_BLOCK } from "#src/lib/otp/encode/token";
-import { deleteOtpTokenId, updateOtpTokenExpires } from "#src/lib/otp/id";
+import { deleteOtpTokenId, updateOtpTokenExpires, verifyOtpTokenId } from "#src/lib/otp/id";
 import kmsOtp from "#src/lib/otp/kms";
 import sendOtp from "#src/lib/otp/send";
-import { APP_RES_INIT_200, APP_RES_INIT_DEFAULT_BAD } from "#src/lib/response/app";
+import { APP_RES_INIT_200, APP_RES_INIT_409, APP_RES_INIT_DEFAULT_BAD } from "#src/lib/response/app";
 import { msToSeconds } from "#src/lib/time";
 
 /**
@@ -148,7 +148,7 @@ export default async function handleOtpResending(req) {
       let i = 0;
 
       do {
-        additionalData = createId(KEK_ID_BYTES);
+        additionalData = generateRandomId(KEK_ID_BYTES);
         kekId = additionalData.toBase64(BASE64URL_OPTIONS);
         kek = await createKek();
         i++;
@@ -162,21 +162,12 @@ export default async function handleOtpResending(req) {
     }
   }
 
-  currentOtpToken[EXPIRES] = await updateOtpTokenExpires(id, expires);
-
-  if (!currentOtpToken[EXPIRES]) {
+  if (!(await verifyOtpTokenId(id, expires))) {
     cookies.delete(COOKIE_NAME_OTP);
     return new Response(null, APP_RES_INIT_DEFAULT_BAD);
   }
 
-  const expiresSeconds = msToSeconds(currentOtpToken[EXPIRES], Math.trunc);
-
-  currentOtpToken[OTP] = createOtp();
-
-  /**
-   * @type {(string|null)}
-   */
-  let responseBody = null;
+  currentOtpToken[OTP] = generateOtp();
 
   /**
    * @type {ResponseInit}
@@ -185,13 +176,21 @@ export default async function handleOtpResending(req) {
 
   if (await sendOtp(currentOtpToken[CREDENTIAL], currentOtpToken[OTP])) {
     delete currentOtpToken[RESEND_BLOCK];
-    responseBody = compressNumber(expiresSeconds);
     init = APP_RES_INIT_200;
   } else {
     blockOtpToken(currentOtpToken);
   }
 
+  currentOtpToken[EXPIRES] = await updateOtpTokenExpires(id, expires);
+
+  if (!currentOtpToken[EXPIRES]) {
+    cookies.delete(COOKIE_NAME_OTP);
+    return new Response(null, APP_RES_INIT_409);
+  }
+
   newEncodedOtpTokenList.push(encodeOtpToken(currentOtpToken), id);
+
+  const expiresSeconds = msToSeconds(currentOtpToken[EXPIRES], Math.trunc);
 
   setOtpCookie(
     cookies,
@@ -199,5 +198,5 @@ export default async function handleOtpResending(req) {
     expiresSeconds
   );
 
-  return new Response(responseBody, init);
+  return new Response(compressNumber(expiresSeconds), init);
 }

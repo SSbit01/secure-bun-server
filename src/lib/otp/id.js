@@ -13,8 +13,9 @@
 
 import { BASE64URL_OPTIONS } from "#src/lib/base64";
 import { OTP_MAX_AGE_MS } from "#src/lib/computed";
-import { createId } from "#src/lib/crypto/id";
-import { MAX_KMS_STORE_ATTEMPTS } from "#src/lib/kms";
+import { generateRandomId } from "#src/lib/id";
+
+const MAX_STORE_ATTEMPTS = 3;
 
 /**
  * @type {Map<string,number>}
@@ -27,10 +28,10 @@ const idStorage = new Map();
  * If the key could not be saved due to a technical error, an error should be thrown.
  *
  * @async
- * @function createOtpTokenListId
+ * @function generateOtpTokenListId
  * @return {Promise<[string, number]>} The new ID and the expiration date.
  */
-export async function createOtpTokenListId() {
+export async function generateOtpTokenListId() {
   // Manually clean up expired IDs, as this implementation cannot automatically delete them.
 
   const dateNow = Date.now();
@@ -49,11 +50,11 @@ export async function createOtpTokenListId() {
   let i = 0;
 
   do {
-    newId = createId().toBase64(BASE64URL_OPTIONS);
+    newId = generateRandomId().toBase64(BASE64URL_OPTIONS);
     i++;
-  } while (idStorage.has(newId) && i < MAX_KMS_STORE_ATTEMPTS);
+  } while (idStorage.has(newId) && i < MAX_STORE_ATTEMPTS);
 
-  if (i >= MAX_KMS_STORE_ATTEMPTS) {
+  if (i >= MAX_STORE_ATTEMPTS) {
     throw new Error("Too many attempts to store a OTP ID.");
   }
 
@@ -104,7 +105,7 @@ export async function deleteOtpTokenId(id, expires) {
  * @async
  * @function replaceOtpTokenId
  * @param {string} oldId - The ID to delete.
- * @param {number} expires - Expiration time in milliseconds since epoch. It may be used to verify the ID.
+ * @param {number} expires - Expiration time in milliseconds since epoch. It is used to verify the ID.
  * @returns {Promise<string|undefined>} New Id.
  */
 export async function replaceOtpTokenId(oldId, expires) {
@@ -132,11 +133,11 @@ export async function replaceOtpTokenId(oldId, expires) {
   let i = 0;
 
   do {
-    newId = createId().toBase64(BASE64URL_OPTIONS);
+    newId = generateRandomId().toBase64(BASE64URL_OPTIONS);
     i++;
-  } while ((idStorage.has(newId) || newId === oldId) && i < MAX_KMS_STORE_ATTEMPTS);
+  } while ((idStorage.has(newId) || newId === oldId) && i < MAX_STORE_ATTEMPTS);
 
-  if (i >= MAX_KMS_STORE_ATTEMPTS) {
+  if (i >= MAX_STORE_ATTEMPTS) {
     throw new Error("Too many attempts to replace a OTP ID.");
   }
 
@@ -151,7 +152,7 @@ export async function replaceOtpTokenId(oldId, expires) {
  * @async
  * @function updateOtpTokenExpires
  * @param {string} id - The ID.
- * @param {number} oldExpires - Expiration time in milliseconds since epoch. It may be used to verify the ID. It is not checked because the server already filters expired IDs.
+ * @param {number} oldExpires - Expiration time in milliseconds since epoch. It is used to verify the ID.
  * @returns {Promise<number>} New expiration time.
  */
 export async function updateOtpTokenExpires(id, oldExpires) {
@@ -164,4 +165,15 @@ export async function updateOtpTokenExpires(id, oldExpires) {
   idStorage.set(id, newExpires);
 
   return newExpires;
+}
+
+/**
+ * @async
+ * @function verifyOtpTokenId
+ * @param {string} id - The ID.
+ * @param {number} expires - Expiration time in milliseconds since epoch. It is used to verify the ID.
+ * @returns {Promise<boolean>}
+ */
+export async function verifyOtpTokenId(id, expires) {
+  return idStorage.get(id) === expires;
 }

@@ -15,8 +15,8 @@
 
 import { BASE64URL_OPTIONS } from "#src/lib/base64";
 import { KEK_ID_LENGTH } from "#src/lib/computed";
-import { createId, isBase64UrlIdValid } from "#src/lib/crypto/id";
 import { createKek, unwrapKey, WRAPPED_DEK_BYTES } from "#src/lib/crypto/symmetric/kek";
+import { generateRandomId, isBase64UrlIdValid } from "#src/lib/id";
 
 /**
  * @typedef {[expires:number,rotate:number,key:CryptoKey]} KeyData
@@ -180,7 +180,7 @@ class KMS {
     let i = 0;
 
     do {
-      newKeyId = createId(KEK_ID_BYTES).toBase64(BASE64URL_OPTIONS);
+      newKeyId = generateRandomId(KEK_ID_BYTES).toBase64(BASE64URL_OPTIONS);
       i++;
     } while (!(await this.store(newKeyId, await createKek())) && i < MAX_KMS_STORE_ATTEMPTS);
     if (i >= MAX_KMS_STORE_ATTEMPTS) {
