@@ -235,7 +235,7 @@ WHERE session_id=${this.#id}`.values();
       return;
     }
 
-    return result[0] ?? false;
+    return Boolean(result[0]);
   }
 
   /**
