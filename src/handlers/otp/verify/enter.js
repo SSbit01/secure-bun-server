@@ -270,7 +270,7 @@ WHERE e.email=${email}`;
   const { lastInsertRowid: emailId } = await sql`INSERT INTO emails (email) VALUES (${email})`;
 
   if (emailId == null) {
-    console.error("The email address was not saved in the database while trying to register a new user:", email)
+    console.error("The email address was not saved in the database while trying to register a new user:", email);
     return new Response(null, APP_RES_INIT_500);
   }
 
