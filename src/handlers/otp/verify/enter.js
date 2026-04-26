@@ -293,7 +293,7 @@ WHERE e.email=${email}`;
       i++;
     } while (userId == null && i < 2);
 
-    if (!userId) {
+    if (userId == null) {
       throw new Error("Too many attempts to create a user.");
     }
 
