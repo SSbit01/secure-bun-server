@@ -14,7 +14,7 @@ import { OTP_ATTEMPTS_BLOCK } from "#src/lib/otp/custom";
 import { ATTEMPTS, CREDENTIAL, decodeOtpToken, EXPIRES, encodeOtpToken, OTP, OTP_BLOCK } from "#src/lib/otp/encode/token";
 import { deleteOtpTokenId, replaceOtpTokenId, verifyOtpTokenId } from "#src/lib/otp/id";
 import kmsOtp from "#src/lib/otp/kms";
-import { APP_RES_INIT_200, APP_RES_INIT_204, APP_RES_INIT_403, APP_RES_INIT_DEFAULT_BAD } from "#src/lib/response/app";
+import { APP_RES_INIT_200, APP_RES_INIT_204, APP_RES_INIT_403, APP_RES_INIT_500, APP_RES_INIT_DEFAULT_BAD } from "#src/lib/response/app";
 import Session from "#src/lib/session";
 import sql from "#src/lib/sql";
 import { msToSeconds } from "#src/lib/time";
@@ -246,7 +246,7 @@ LEFT JOIN user_emails ue2 ON u.id=ue2.user_id AND ue2.is_backup=(1-ue.is_backup)
 LEFT JOIN emails e2 ON ue2.email_id=e2.id
 WHERE e.email=${email}`;
 
-  if (user?.session_id) {
+  if (user) {
     await new Session(cookies, user.session_id.toBase64(BASE64URL_OPTIONS)).save();
 
     if (user.is_other_email_backup) {
@@ -265,6 +265,13 @@ WHERE e.email=${email}`;
     delete user.session_id;
 
     return Response.json(user, APP_RES_INIT_200);
+  }
+
+  const { lastInsertRowid: emailId } = await sql`INSERT INTO emails (email) VALUES (${email})`;
+
+  if (emailId == null) {
+    console.error("The email address was not saved in the database while trying to register a new user:", email)
+    return new Response(null, APP_RES_INIT_500);
   }
 
   /**
@@ -288,12 +295,6 @@ WHERE e.email=${email}`;
 
     if (!userId) {
       throw new Error("Too many attempts to create a user.");
-    }
-
-    const emailId = user?.email_id ?? (await tx`INSERT INTO emails (email) VALUES (${email})`).lastInsertRowid;
-
-    if (emailId == null) {
-      throw new Error("The email address was not saved in the database while trying to register a new user: " + email);
     }
 
     await tx`INSERT INTO user_emails (is_backup,email_id,user_id) VALUES (FALSE,${emailId},${userId})`;
