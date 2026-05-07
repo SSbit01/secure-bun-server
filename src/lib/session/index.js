@@ -98,7 +98,7 @@ export async function getSession(cookies) {
           );
         }
 
-        if (affectedRows) {
+        if (affectedRows > 0) {
           console.log("Compromised session_id successfully rotated.");
         } else {
           console.log("Compromised session_id does not exist.");
@@ -361,7 +361,7 @@ WHERE u.session_id=${this.#id}`;
 
     if (
       data.owned &&
-      (data.is_backup === backup || (await sql`UPDATE user_emails SET is_backup=!is_backup WHERE user_id=${data.id}`).affectedRows)
+      (data.is_backup === backup || (await sql`UPDATE user_emails SET is_backup=!is_backup WHERE user_id=${data.id}`).affectedRows > 0)
     ) {
       return true;
     }
