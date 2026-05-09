@@ -320,17 +320,19 @@ EXISTS(SELECT 1 FROM user_emails ue2 WHERE ue2.user_id=u.id AND ue2.is_backup=TR
   /**
    * @async
    * @function updateDisplayName
-   * @param {string} newDisplayName
+   * @param {(string|null)} [newDisplayName]
    * @returns {Promise<boolean>}
    */
-  async updateDisplayName(newDisplayName) {
+  async updateDisplayName(newDisplayName = null) {
     const [user] = await sql`SELECT id,display_name FROM users WHERE session_id=${this.#id}`;
 
     if (!user) {
       return false;
     }
 
-    if ((user.display_name ?? "") !== newDisplayName) {
+    newDisplayName ||= null;
+
+    if (user.display_name !== newDisplayName) {
       return (await sql`UPDATE users SET display_name=${newDisplayName} WHERE id=${user.id}`).affectedRows > 0;
     }
 
