@@ -330,7 +330,7 @@ EXISTS(SELECT 1 FROM user_emails ue2 WHERE ue2.user_id=u.id AND ue2.is_backup=TR
       return false;
     }
 
-    if (user.display_name !== newDisplayName) {
+    if ((user.display_name ?? "") !== newDisplayName) {
       return (await sql`UPDATE users SET display_name=${newDisplayName} WHERE id=${user.id}`).affectedRows > 0;
     }
 
