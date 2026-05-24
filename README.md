@@ -19,12 +19,9 @@ Perfect for building performant and secure platform servers.
 
 ### Secure by Design
 
-Generates cryptographically secure OTPs and encrypts session data using envelope encryption with
+This server generates cryptographically secure OTPs and protects session data through quantum-resistant envelope encryption with
 [AES-256-KW](https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto/wrapKey#AES-256-KW) (KEK)
-and [AES-256-GCM](https://en.wikipedia.org/wiki/Galois/Counter_Mode) (DEK),
-which is extremely fast on modern CPUs because they have dedicated hardware acceleration
-([AES-NI](https://en.wikipedia.org/wiki/AES_instruction_set)),
-in addition to being quantum-resistant.
+and [AES-256-GCM](https://en.wikipedia.org/wiki/Galois/Counter_Mode) (DEK).
 
 ### Email address validation
 
