@@ -20,8 +20,7 @@ Perfect for building performant and secure platform servers.
 ### Secure by Design
 
 This server generates cryptographically secure OTPs and protects session data through quantum-resistant envelope encryption with
-[AES-256-KW](https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto/wrapKey#AES-256-KW) (KEK)
-and [AES-256-GCM](https://en.wikipedia.org/wiki/Galois/Counter_Mode) (DEK).
+AES-256-KW and AES-256-GCM.
 
 ### Email address validation
 
@@ -46,7 +45,7 @@ The server only stores random IDs, so it cannot know which credentials are curre
 providing enhanced privacy and security without the overhead of a traditional storage system.
 
 1. When an OTP is created, its metadata (credential, expiry, attempts...) is compressed and appended to an encrypted list of tokens
-(one entry per credential) using envelope encryption with AES-256-KW (KEK) and AES-256-GCM (DEK).
+(one entry per credential).
 The encrypted list is sent to the client in a secure, `HttpOnly` cookie.
 2. A random ID linked to the list is generated and stored on the server.
 3. When the client attempts to verify an OTP token, it sends back the encrypted list.
