@@ -38,7 +38,7 @@ Store several OTP tokens per login session, each bound to a different credential
 Users can move between credentials without restarting the flow,
 and the login session encrypted cookie enforces a strict cap so tokens stay lightweight.
 
-## Serverless Authentication OTP Architecture
+## OTP Authentication Architecture
 
 This server uses a hybrid design that provides even more security than a stateful design.
 The server only stores random IDs, so it cannot know which credentials are currently being verified,
