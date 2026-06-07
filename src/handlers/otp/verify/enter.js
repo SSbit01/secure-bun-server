@@ -135,7 +135,10 @@ export default async function handleOtpEnterVerification(req) {
     return new Response(null, APP_RES_INIT_DEFAULT_BAD);
   }
 
-  delete currentOtpToken[OTP_BLOCK];
+  /**
+   * Do not use `delete` because it can break engine optimizations.
+   */
+  currentOtpToken[OTP_BLOCK] = undefined;
 
   if (currentOtpToken[OTP] !== otp) {
     /**
@@ -255,14 +258,12 @@ WHERE e.email=${email}`;
       user.email = user.other_email;
     }
 
-    if (!user.display_name) {
-      delete user.display_name;
-    }
+    user.display_name ||= undefined;
 
-    delete user.email_id;
-    delete user.other_email;
-    delete user.is_other_email_backup;
-    delete user.session_id;
+    user.email_id = undefined;
+    user.other_email = undefined;
+    user.is_other_email_backup = undefined;
+    user.session_id = undefined;
 
     return Response.json(user, APP_RES_INIT_200);
   }

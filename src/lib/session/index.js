@@ -199,13 +199,9 @@ GROUP BY u.id`;
       return;
     }
 
-    if (!data.display_name) {
-      delete data.display_name;
-    }
+    data.display_name ||= undefined;
 
-    if (!data.email2) {
-      delete data.email2;
-    }
+    data.email2 ||= undefined;
 
     return data;
   }

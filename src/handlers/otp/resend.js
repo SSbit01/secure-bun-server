@@ -175,7 +175,7 @@ export default async function handleOtpResending(req) {
   let init = APP_RES_INIT_DEFAULT_BAD;
 
   if (await sendOtp(currentOtpToken[CREDENTIAL], currentOtpToken[OTP])) {
-    delete currentOtpToken[RESEND_BLOCK];
+    currentOtpToken[RESEND_BLOCK] = undefined;
     init = APP_RES_INIT_200;
   } else {
     blockOtpToken(currentOtpToken);

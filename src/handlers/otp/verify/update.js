@@ -138,7 +138,7 @@ export default async function handleOtpUpdateVerification(req) {
     return new Response(null, APP_RES_INIT_DEFAULT_BAD);
   }
 
-  delete currentOtpToken[OTP_BLOCK];
+  currentOtpToken[OTP_BLOCK] = undefined;
 
   if (currentOtpToken[OTP] !== otp) {
     /**
