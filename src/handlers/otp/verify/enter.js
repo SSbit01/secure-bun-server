@@ -249,7 +249,7 @@ LEFT JOIN user_emails ue2 ON u.id=ue2.user_id AND ue2.is_backup=(1-ue.is_backup)
 LEFT JOIN emails e2 ON ue2.email_id=e2.id
 WHERE e.email=${email}`;
 
-  if (user) {
+  if (user?.session_id != null) {
     await new Session(cookies, user.session_id.toBase64(BASE64URL_OPTIONS)).save();
 
     if (user.is_other_email_backup) {
@@ -265,10 +265,16 @@ WHERE e.email=${email}`;
     user.is_other_email_backup = undefined;
     user.session_id = undefined;
 
+    try {
+      await deleteOtpTokenId(id, expires);
+    } catch (error) {
+      console.error(error);
+    }
+
     return Response.json(user, APP_RES_INIT_200);
   }
 
-  const { lastInsertRowid: emailId } = await sql`INSERT INTO emails (email) VALUES (${email})`;
+  const emailId = user?.email_id ?? (await sql`INSERT INTO emails (email) VALUES (${email})`).lastInsertRowid;
 
   if (emailId == null) {
     console.error("The email address was not saved in the database while trying to register a new user:", email);
