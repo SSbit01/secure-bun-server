@@ -4,15 +4,15 @@
     "url": "https://github.com/SSbit01/secure-bun-server/issues"
   },
   "dependencies": {
-    "mailchecker": "^6.0.20",
+    "mailchecker": "^6.0.21",
     "validator": "^13.15.35"
   },
   "description": "Template with passwordless authentication via email, KMS, and a MariaDB/MySQL database configured in Bun.",
   "devDependencies": {
-    "@biomejs/biome": "2.4.15",
+    "@biomejs/biome": "2.5.13",
     "@types/validator": "^13.15.10",
-    "bun-types": "^1.3.14",
-    "generate-license-file": "^4.2.1"
+    "bun-types": "^1.3.0",
+    "generate-license-file": "^4.2.5"
   },
   "engines": {
     "bun": ">=1.3"
@@ -35,7 +35,7 @@
     "setup": "bun run --parallel \"setup:*\"",
     "setup:sql": "bun ./scripts/setup/sql.js",
     "start": "bun ./dist/index.js",
-    "test": "bun test --bail"
+    "test": "bun test"
   },
   "type": "module"
 }
