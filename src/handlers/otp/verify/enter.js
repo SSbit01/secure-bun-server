@@ -40,7 +40,7 @@ export default async function handleOtpEnterVerification(req) {
 
   const { cookies } = req;
 
-  const otpData = cookies.get(COOKIE_NAME_OTP)?.trim()?.trim();
+  const otpData = cookies.get(COOKIE_NAME_OTP)?.trim();
 
   if (!otpData) {
     return new Response(null, APP_RES_INIT_DEFAULT_BAD);
