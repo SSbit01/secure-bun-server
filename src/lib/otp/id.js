@@ -22,6 +22,16 @@ const MAX_STORE_ATTEMPTS = 3;
  */
 const idStorage = new Map();
 
+setInterval(() => {
+  const dateNow = Date.now();
+
+  for (const [id, expires] of idStorage) {
+    if (expires <= dateNow) {
+      idStorage.delete(id);
+    }
+  }
+}, 60000);
+
 /**
  * Stores an encryption key with the given ID and expiration time.
  *
@@ -32,36 +42,28 @@ const idStorage = new Map();
  * @return {Promise<[string, number]>} The new ID and the expiration date.
  */
 export async function generateOtpTokenListId() {
-  // Manually clean up expired IDs, as this implementation cannot automatically delete them.
-
-  const dateNow = Date.now();
-
-  for (const [id, expires] of idStorage) {
-    if (expires <= dateNow) {
-      idStorage.delete(id);
-    }
-  }
-
   /**
    * @type {string}
    */
   let newId;
-
+  
+  /**
+   * @type {(number|undefined)}
+   */
+  let storedExpires;
+  
   let i = 0;
 
   do {
     newId = generateRandomId().toBase64(BASE64URL_OPTIONS);
+    storedExpires = idStorage.get(newId);
     i++;
-  } while (idStorage.has(newId) && i < MAX_STORE_ATTEMPTS);
+  } while (storedExpires !== undefined && i < MAX_STORE_ATTEMPTS && storedExpires < Date.now());
 
   if (i >= MAX_STORE_ATTEMPTS) {
-    throw new Error("Too many attempts to store a OTP ID.");
+    throw new Error("Failed to generate a new ID after several attempts in `generateOtpTokenListId`");
   }
 
-  /**
-   * The cleanup loop might have taken some milliseconds.
-   * That is the reason `Date.now()` is used instead of the passed date.
-   */
   const expires = Date.now() + OTP_MAX_AGE_MS;
 
   idStorage.set(newId, expires);
@@ -93,6 +95,7 @@ export async function deleteOtpTokenId(id, expires) {
     if (storedExpires <= Date.now()) {
       idStorage.delete(id);
     }
+
     return false;
   }
 
@@ -112,34 +115,30 @@ export async function replaceOtpTokenId(oldId, expires) {
   if (idStorage.get(oldId) !== expires) {
     return;
   }
-
-  // Manually clean up expired IDs, as this implementation cannot automatically delete them.
-
-  const dateNow = Date.now();
-
-  for (const [id, expires] of idStorage) {
-    if (expires <= dateNow) {
-      idStorage.delete(id);
-    }
-  }
-
-  idStorage.delete(oldId);
-
+  
   /**
    * @type {string}
    */
   let newId;
+  
+  /**
+   * @type {(number|undefined)}
+   */
+  let storedExpires;
 
   let i = 0;
 
   do {
     newId = generateRandomId().toBase64(BASE64URL_OPTIONS);
+    storedExpires = idStorage.get(newId);
     i++;
-  } while ((idStorage.has(newId) || newId === oldId) && i < MAX_STORE_ATTEMPTS);
+  } while (storedExpires !== undefined && i < MAX_STORE_ATTEMPTS && storedExpires < Date.now());
 
   if (i >= MAX_STORE_ATTEMPTS) {
-    throw new Error("Too many attempts to replace a OTP ID.");
+    throw new Error("Failed to generate a new ID after several attempts in `replaceOtpTokenId`");
   }
+
+  idStorage.delete(oldId);
 
   idStorage.set(newId, expires);
 
