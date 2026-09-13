@@ -1,7 +1,7 @@
 # Secure Bun Server
 
-Template with passwordless authentication via email, KMS, and a MariaDB/MySQL database configured in Bun.
-Perfect for building performant and secure platform servers.
+A performant, secure Bun server template featuring passwordless email authentication, MariaDB/MySQL integration, and KMS key
+management.
 
 > [!CAUTION]
 >
