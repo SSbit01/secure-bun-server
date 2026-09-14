@@ -242,6 +242,10 @@ export default async function handleOtpUpdateVerification(req) {
   cookies.delete(COOKIE_NAME_OTP);
 
   try {
+    /**
+     * In rare cases, an expired token's ID may get reused by another token.
+     * To prevent this, always pass the `expires` parameter.
+     */
     await deleteOtpTokenId(id, expires);
   } catch (error) {
     console.error(error);

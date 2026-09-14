@@ -266,6 +266,10 @@ WHERE e.email=${email}`;
     user.session_id = undefined;
 
     try {
+      /**
+       * In rare cases, an expired token's ID may get reused by another token.
+       * To prevent this, always pass the `expires` parameter.
+       */
       await deleteOtpTokenId(id, expires);
     } catch (error) {
       console.error(error);
@@ -310,6 +314,10 @@ WHERE e.email=${email}`;
   cookies.delete(COOKIE_NAME_OTP);
 
   try {
+    /**
+     * In rare cases, an expired token's ID may get reused by another token.
+     * To prevent this, always pass the `expires` parameter.
+     */
     await deleteOtpTokenId(id, expires);
   } catch (error) {
     console.error(error);
