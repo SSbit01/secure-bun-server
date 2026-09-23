@@ -267,8 +267,6 @@ WHERE session_id=${this.#id}`.values();
       this.#dekRotationDateMs = Date.now() + 86400000; // Rotate DEK after one day.
     }
 
-    const compressedDateNow = compressNumber(Date.now());
-
     this.#cookies.set(
       COOKIE_NAME_SESSION,
       this.#envelope +
@@ -278,7 +276,7 @@ WHERE session_id=${this.#id}`.values();
         TOKEN_SEPARATOR +
         compressNumber(this.#dekRotationDateMs) +
         TOKEN_SEPARATOR +
-        compressedDateNow,
+        compressNumber(Date.now()),
         additionalData
       )),
       COOKIE_OPTIONS_SESSION
