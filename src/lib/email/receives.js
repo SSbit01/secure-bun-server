@@ -1,4 +1,4 @@
-import { Resolver, resolveMx, NODATA, NOTFOUND, REFUSED } from "node:dns/promises";
+import { NODATA, NOTFOUND, REFUSED, Resolver, resolveMx } from "node:dns/promises";
 import { msToSeconds } from "#src/lib/time";
 
 const resolver = new Resolver({
@@ -19,7 +19,7 @@ const RECEIVES_EMAIL_CACHE_SECONDS = 15;
 
 /**
  * Hostname - Created (in seconds)
- * 
+ *
  * @type {Map<string,number>}
  */
 const receivesEmailMap = new Map();
@@ -43,10 +43,7 @@ setInterval(() => {
 export default async function receivesEmail(hostname) {
   const cacheCreatedSeconds = receivesEmailMap.get(hostname);
 
-  if (
-    cacheCreatedSeconds &&
-    cacheCreatedSeconds >= (msToSeconds(Date.now()) - RECEIVES_EMAIL_CACHE_SECONDS)
-  ) {
+  if (cacheCreatedSeconds && cacheCreatedSeconds >= msToSeconds(Date.now()) - RECEIVES_EMAIL_CACHE_SECONDS) {
     return true;
   }
 

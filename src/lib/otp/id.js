@@ -46,12 +46,12 @@ export async function generateOtpTokenListId() {
    * @type {string}
    */
   let newId;
-  
+
   /**
    * @type {(number|undefined)}
    */
   let storedExpires;
-  
+
   let i = 0;
 
   do {
@@ -115,12 +115,12 @@ export async function replaceOtpTokenId(oldId, expires) {
   if (idStorage.get(oldId) !== expires) {
     return;
   }
-  
+
   /**
    * @type {string}
    */
   let newId;
-  
+
   /**
    * @type {(number|undefined)}
    */

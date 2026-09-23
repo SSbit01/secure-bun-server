@@ -10,13 +10,9 @@ import { getSession } from "#src/lib/session";
 export default async function handleUserDelete(req) {
   const session = await getSession(req.cookies);
 
-  if (!session) {
-    return new Response(null, APP_RES_INIT_DEFAULT_BAD);
-  }
-
   /**
-   * `deleteAccount` also remove the session cookie too.
+   * `deleteAccount` also removes the session cookie too.
    */
 
-  return new Response(null, (await session.deleteAccount()) ? APP_RES_INIT_200 : APP_RES_INIT_DEFAULT_BAD);
+  return new Response(null, session && (await session.deleteAccount()) ? APP_RES_INIT_200 : APP_RES_INIT_DEFAULT_BAD);
 }

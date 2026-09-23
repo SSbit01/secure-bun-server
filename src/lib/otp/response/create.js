@@ -10,7 +10,7 @@ import { KEK_ID_BYTES, MAX_KMS_STORE_ATTEMPTS } from "#src/lib/kms";
 import { getOtpTokenList, OTP_TOKEN_SEPARATOR, setOtpCookie } from "#src/lib/otp";
 import { generateOtp } from "#src/lib/otp/custom";
 import { CREDENTIAL, createEncodedOtpToken, decodeOtpToken, EXPIRES, encodeOtpToken, encodeOtpTokenData } from "#src/lib/otp/encode/token";
-import { generateOtpTokenListId, deleteOtpTokenId, updateOtpTokenExpires, verifyOtpTokenId } from "#src/lib/otp/id";
+import { deleteOtpTokenId, generateOtpTokenListId, updateOtpTokenExpires, verifyOtpTokenId } from "#src/lib/otp/id";
 import kmsOtp from "#src/lib/otp/kms";
 import sendOtp from "#src/lib/otp/send";
 import { APP_RES_INIT_200, APP_RES_INIT_409, APP_RES_INIT_DEFAULT_BAD } from "#src/lib/response/app";
