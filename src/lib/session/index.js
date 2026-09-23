@@ -44,7 +44,7 @@ export async function getSession(cookies) {
   try {
     /**
      * All dates are compressed.
-     * [sessionId: string, dekRotationDateMs: string, lastFetchDate: string lastValidAccessDateMs: string]
+     * [sessionId: string, dekRotationDateMs: string, lastValidAccessDateMs: string]
      */
     sessionInfo = (
       await decryptTextSymmetrically(
@@ -60,20 +60,17 @@ export async function getSession(cookies) {
 
   const idString = isBase64UrlIdValid(sessionInfo[0] || "") && sessionInfo[0];
   const dekRotationDateMs = decompressNumber(sessionInfo[1] || "");
-  const lastFetchDate = decompressNumber(sessionInfo[2] || "");
   const lastValidAccessDateMs = decompressNumber(sessionInfo[3] || "");
 
   const dateNow = Date.now();
 
   if (
-    sessionInfo.length !== 4 ||
+    sessionInfo.length !== 3 ||
     !idString ||
     !dekRotationDateMs ||
     dekRotationDateMs - dateNow > SESSION_MAX_AGE_MS ||
-    !lastFetchDate ||
     !lastValidAccessDateMs ||
     lastValidAccessDateMs > dekRotationDateMs ||
-    lastFetchDate > lastValidAccessDateMs ||
     lastValidAccessDateMs > dateNow
   ) {
     cookies.delete(COOKIE_NAME_SESSION);
@@ -114,7 +111,7 @@ export async function getSession(cookies) {
     return;
   }
 
-  return new Session(cookies, idString, dek, dekRotationDateMs, envelope, lastFetchDate);
+  return new Session(cookies, idString, dek, dekRotationDateMs, envelope);
 }
 
 export default class Session {
@@ -124,7 +121,6 @@ export default class Session {
   #envelope;
   #id;
   #idString;
-  #lastFetchDate;
 
   /**
    * @param {Bun.CookieMap} cookies
@@ -132,16 +128,14 @@ export default class Session {
    * @param {CryptoKey} [dek]
    * @param {number} [dekRotationDateMs]
    * @param {string} [envelope]
-   * @param {number} [lastFetchDate]
    */
-  constructor(cookies, idString, dek, dekRotationDateMs, envelope = "", lastFetchDate) {
+  constructor(cookies, idString, dek, dekRotationDateMs, envelope = "") {
     this.#cookies = cookies;
     this.#dek = dek;
     this.#dekRotationDateMs = dekRotationDateMs;
     this.#envelope = envelope;
     this.#id = Uint8Array.fromBase64(idString, BASE64URL_OPTIONS);
     this.#idString = idString;
-    this.#lastFetchDate = lastFetchDate;
   }
 
   /**
@@ -246,7 +240,7 @@ WHERE session_id=${this.#id}`.values();
 
     let kekId = await kmsSession.getCurrentId();
 
-    if (this.#dek && this.#dekRotationDateMs && this.#dekRotationDateMs > Date.now() && this.#envelope.startsWith(kekId)) {
+    if (this.#dek && this.#dekRotationDateMs && this.#dekRotationDateMs >= Date.now() && this.#envelope.startsWith(kekId)) {
       additionalData = Uint8Array.fromBase64(kekId, BASE64URL_OPTIONS);
     } else {
       let kek = await kmsSession.get(kekId);
@@ -278,17 +272,15 @@ WHERE session_id=${this.#id}`.values();
     this.#cookies.set(
       COOKIE_NAME_SESSION,
       this.#envelope +
-        (await encryptTextSymmetrically(
-          this.#dek,
-          this.#idString +
-            TOKEN_SEPARATOR +
-            compressNumber(this.#dekRotationDateMs) +
-            TOKEN_SEPARATOR +
-            (this.#lastFetchDate ? compressNumber(this.#lastFetchDate) : compressedDateNow) +
-            TOKEN_SEPARATOR +
-            compressedDateNow,
-          additionalData
-        )),
+      (await encryptTextSymmetrically(
+        this.#dek,
+        this.#idString +
+        TOKEN_SEPARATOR +
+        compressNumber(this.#dekRotationDateMs) +
+        TOKEN_SEPARATOR +
+        compressedDateNow,
+        additionalData
+      )),
       COOKIE_OPTIONS_SESSION
     );
   }
