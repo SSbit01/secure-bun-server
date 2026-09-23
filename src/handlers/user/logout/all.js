@@ -13,6 +13,7 @@ export default async function handleUserAllSessionsLogout(req) {
   if (!session) {
     return new Response(null, APP_RES_INIT_DEFAULT_BAD);
   }
+  
   const result = await session.updateSessionIdFast();
 
   /**
