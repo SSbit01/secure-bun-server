@@ -13,8 +13,12 @@ export default async function handleUserAllSessionsLogout(req) {
   if (!session) {
     return new Response(null, APP_RES_INIT_DEFAULT_BAD);
   }
+  const result = await session.updateSessionIdFast();
 
+  /**
+   * Delete the cookie only after calling `updateSessionIdFast()`, as it may throw an error.
+   */
   session.deleteCookie();
 
-  return new Response(null, (await session.updateSessionIdFast()) ? APP_RES_INIT_200 : APP_RES_INIT_DEFAULT_BAD);
+  return new Response(null, result ? APP_RES_INIT_200 : APP_RES_INIT_DEFAULT_BAD);
 }

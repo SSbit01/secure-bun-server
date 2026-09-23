@@ -151,8 +151,14 @@ export default class Session {
    * @returns {Promise<boolean>}
    */
   async deleteAccount() {
+    const result = (await sql`DELETE FROM users WHERE session_id=${this.#id}`).affectedRows > 0;
+
+    /**
+     * Delete the cookie only after deleting the user in the database, as it may throw an error.
+     */
     this.deleteCookie();
-    return (await sql`DELETE FROM users WHERE session_id=${this.#id}`).affectedRows > 0;
+
+    return result;
   }
 
   /**
@@ -380,8 +386,6 @@ WHERE u.session_id=${this.#id}`;
   }
 
   /**
-   * This function (unlike `updateSessionId`) doesn't update the internal `id` state, so the session cannot be reused.
-   *
    * @async
    * @function updateSessionIdFast
    * @returns {Promise<boolean>}
