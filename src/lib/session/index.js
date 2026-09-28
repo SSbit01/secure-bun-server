@@ -95,11 +95,7 @@ export async function getSession(cookies) {
           );
         }
 
-        if (affectedRows > 0) {
-          console.log("Compromised session_id successfully rotated.");
-        } else {
-          console.log("Compromised session_id does not exist.");
-        }
+        console.log(affectedRows > 0 ? "Compromised session_id successfully rotated." : "Compromised session_id does not exist.");
       });
     }
 
