@@ -60,7 +60,7 @@ export async function getSession(cookies) {
 
   const idString = isBase64UrlIdValid(sessionInfo[0] || "") && sessionInfo[0];
   const dekRotationDateMs = decompressNumber(sessionInfo[1] || "");
-  const lastValidAccessDateMs = decompressNumber(sessionInfo[3] || "");
+  const lastValidAccessDateMs = decompressNumber(sessionInfo[2] || "");
 
   const dateNow = Date.now();
 
