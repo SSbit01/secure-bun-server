@@ -1,12 +1,12 @@
 import otpAttributes from "#shared/otp.json";
 import { COOKIE_NAME_OTP } from "#src/lib/cookie";
 import { decryptTextSymmetrically } from "#src/lib/crypto/symmetric/dek";
-import { ATTEMPTS, OTP, OTP_BLOCK, RESEND_BLOCK } from "#src/lib/otp/encode/token";
+import { ATTEMPTS, OTP, OTP_BLOCK, RESEND_BLOCK } from "#src/lib/otp/codec/token";
 import production from "#src/lib/production";
 import { regexOtp } from "#src/lib/regex";
 
 /**
- * @import { OtpToken } from "#src/lib/otp/encode/token"
+ * @import {OtpToken} from "#src/lib/otp/codec/token"
  */
 
 export const OTP_TOKEN_SEPARATOR = ",";

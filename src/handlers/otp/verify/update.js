@@ -2,7 +2,7 @@ import { isValid as isEmailValid } from "mailchecker";
 import normalizeEmail from "validator/es/lib/normalizeEmail";
 import otpAttributes from "#shared/otp.json";
 import { BASE64URL_OPTIONS } from "#src/lib/base64";
-import { compressNumber } from "#src/lib/compression/number";
+import { compressNumber } from "#src/lib/codec";
 import { ENVELOPE_ENCRYPTION_WRAP_LENGTH, KEK_ID_LENGTH, OTP_INVALID_BLOCK_MS } from "#src/lib/computed";
 import { COOKIE_NAME_OTP } from "#src/lib/cookie";
 import { createDek, encryptTextSymmetrically } from "#src/lib/crypto/symmetric/dek";
@@ -11,7 +11,7 @@ import { generateRandomId } from "#src/lib/id";
 import { KEK_ID_BYTES, MAX_KMS_STORE_ATTEMPTS } from "#src/lib/kms";
 import { blockOtpToken, getOtpTokenList, isOtpValid, OTP_TOKEN_SEPARATOR, setOtpCookie } from "#src/lib/otp";
 import { OTP_ATTEMPTS_BLOCK } from "#src/lib/otp/custom";
-import { ATTEMPTS, CREDENTIAL, decodeOtpToken, EXPIRES, encodeOtpToken, OTP, OTP_BLOCK } from "#src/lib/otp/encode/token";
+import { ATTEMPTS, CREDENTIAL, decodeOtpToken, EXPIRES, encodeOtpToken, OTP, OTP_BLOCK } from "#src/lib/otp/codec/token";
 import { deleteOtpTokenId, replaceOtpTokenId, verifyOtpTokenId } from "#src/lib/otp/id";
 import kmsOtp from "#src/lib/otp/kms";
 import { APP_RES_INIT_204, APP_RES_INIT_403, APP_RES_INIT_DEFAULT_BAD } from "#src/lib/response/app";
@@ -19,7 +19,7 @@ import { getSession } from "#src/lib/session";
 import { msToSeconds } from "#src/lib/time";
 
 /**
- * @import {OtpToken} from "#src/lib/otp/encode/token"
+ * @import {OtpToken} from "#src/lib/otp/codec/token"
  */
 
 /**

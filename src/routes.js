@@ -3,6 +3,7 @@ import handleOtpUpdateCreation from "#src/handlers/otp/create/update";
 import handleOtpResending from "#src/handlers/otp/resend";
 import handleOtpEnterVerification from "#src/handlers/otp/verify/enter";
 import handleOtpUpdateVerification from "#src/handlers/otp/verify/update";
+import handleUserData from "#src/handlers/user";
 import handleUserDelete from "#src/handlers/user/delete";
 import handleUserDisplayNameUpdate from "#src/handlers/user/display";
 import handleUserLogout from "#src/handlers/user/logout";
@@ -22,7 +23,8 @@ const ROUTES = Object.freeze({
   "/s/otp/update": { POST: handleOtpUpdateCreation },
   "/s/otp/verify": { POST: handleOtpEnterVerification },
   "/s/otp/verify/update": { POST: handleOtpUpdateVerification },
-
+  
+  "/s/user": { POST: handleUserData },
   "/s/user/delete": { POST: handleUserDelete },
   "/s/user/display": { POST: handleUserDisplayNameUpdate },
   "/s/user/logout": { POST: handleUserLogout },

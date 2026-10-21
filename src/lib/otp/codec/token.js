@@ -8,10 +8,10 @@
 import { isValid as isEmailValid } from "mailchecker";
 
 import otpAttributes from "#shared/otp.json";
-import { compressNumber, decompressNumber } from "#src/lib/compression/number";
+import { compressNumber, decompressNumber } from "#src/lib/codec";
 import { OTP_INVALID_BLOCK_MS, OTP_MAX_AGE_MS, OTP_RESEND_BLOCK_MS } from "#src/lib/computed";
 import { OTP_ATTEMPTS_BLOCK, OTP_MAX_ATTEMPTS } from "#src/lib/otp/custom";
-import { decodeCredential, encodeCredential } from "#src/lib/otp/encode/credential";
+import { decodeCredential, encodeCredential } from "#src/lib/otp/codec/credential";
 import { regexOtp } from "#src/lib/regex";
 import { msToSeconds } from "#src/lib/time";
 

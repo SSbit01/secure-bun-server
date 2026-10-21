@@ -1,6 +1,6 @@
 import otpAttributes from "#shared/otp.json";
 import { BASE64URL_OPTIONS } from "#src/lib/base64";
-import { compressNumber } from "#src/lib/compression/number";
+import { compressNumber } from "#src/lib/codec";
 import { ENVELOPE_ENCRYPTION_WRAP_LENGTH, KEK_ID_LENGTH, OTP_RESEND_BLOCK_MS } from "#src/lib/computed";
 import { COOKIE_NAME_OTP } from "#src/lib/cookie";
 import { createDek, encryptTextSymmetrically } from "#src/lib/crypto/symmetric/dek";
@@ -9,7 +9,7 @@ import { generateRandomId } from "#src/lib/id";
 import { KEK_ID_BYTES, MAX_KMS_STORE_ATTEMPTS } from "#src/lib/kms";
 import { getOtpTokenList, OTP_TOKEN_SEPARATOR, setOtpCookie } from "#src/lib/otp";
 import { generateOtp } from "#src/lib/otp/custom";
-import { CREDENTIAL, createEncodedOtpToken, decodeOtpToken, EXPIRES, encodeOtpToken, encodeOtpTokenData } from "#src/lib/otp/encode/token";
+import { CREDENTIAL, EXPIRES, createEncodedOtpToken, decodeOtpToken, encodeOtpToken, encodeOtpTokenData } from "#src/lib/otp/codec/token";
 import { deleteOtpTokenId, generateOtpTokenListId, updateOtpTokenExpires, verifyOtpTokenId } from "#src/lib/otp/id";
 import kmsOtp from "#src/lib/otp/kms";
 import sendOtp from "#src/lib/otp/send";

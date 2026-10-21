@@ -7,7 +7,7 @@ ENV NODE_ENV="production"
 WORKDIR /app
 
 # Copy ONLY dependency files first
-COPY package.json bun.lockb* ./
+COPY package.json bun.lock* ./
 
 # Install deps (this layer is cached unless package files change)
 RUN bun install --frozen-lockfile
