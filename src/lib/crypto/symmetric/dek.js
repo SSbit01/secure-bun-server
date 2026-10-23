@@ -1,5 +1,5 @@
 import { BASE64URL_OPTIONS } from "#src/lib/base64";
-import { textDecoder, textEncoder } from "#src/lib/text";
+import { textDecoder, textEncoder } from "#src/lib/codec";
 
 const IV_BYTES = 12;
 const SYMMETRIC_ENCRYPTION_ALGORITHM_NAME = "AES-GCM";

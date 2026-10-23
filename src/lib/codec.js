@@ -1,3 +1,7 @@
+export const textDecoder = new TextDecoder();
+
+export const textEncoder = new TextEncoder();
+
 /**
  * @function compressNumber
  * @param {(number|bigint)} num
