@@ -1,6 +1,4 @@
-import OPTIONS from "#src/options";
-
-const server = Bun.serve(OPTIONS);
+import server from "#src/server";
 
 console.log(server.url.origin);
 console.log("DEVELOPMENT:", server.development);
