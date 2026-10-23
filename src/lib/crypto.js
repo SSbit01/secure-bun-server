@@ -2,22 +2,50 @@ import { BASE64URL_OPTIONS } from "#src/lib/base64";
 import { textDecoder, textEncoder } from "#src/lib/codec";
 
 const IV_BYTES = 12;
+
+const KEY_WRAP_ALGORITHM_NAME = "AES-KW";
+
 const SYMMETRIC_ENCRYPTION_ALGORITHM_NAME = "AES-GCM";
 
 /**
  * @type {AesKeyGenParams}
  */
-export const KEY_ENCRYPTION_PARAMS = Object.freeze({
+const KEY_ENCRYPTION_PARAMS = Object.freeze({
   length: 256,
   name: SYMMETRIC_ENCRYPTION_ALGORITHM_NAME
 });
 
 /**
- * @type {KeyUsage[]}
+ * @type {Readonly<KeyUsage[]>}
  */
-export const KEY_ENCRYPTION_USAGES = ["encrypt", "decrypt"];
+const KEY_ENCRYPTION_USAGES = Object.freeze(["encrypt", "decrypt"]);
 
-Object.freeze(KEY_ENCRYPTION_USAGES);
+/**
+ * @type {AesKeyGenParams}
+ */
+const KEY_WRAP_PARAMS = Object.freeze({
+  length: 256,
+  name: KEY_WRAP_ALGORITHM_NAME
+});
+
+/**
+ * @type {readonly KeyUsage[]}
+ */
+const KEY_WRAP_USAGES = Object.freeze(["wrapKey", "unwrapKey"]);
+
+/**
+ * 32 (original DEK size) + 8 (AES-KW overhead) = 40
+ */
+export const WRAPPED_DEK_BYTES = KEY_ENCRYPTION_PARAMS.length / 8 + 8;
+
+/**
+ * @async
+ * @function createKek
+ * @returns {Promise<CryptoKey>}
+ */
+export async function createKek() {
+  return await crypto.subtle.generateKey(KEY_WRAP_PARAMS, true, KEY_WRAP_USAGES);
+}
 
 /**
  * Before encrypting and decrypting values, a symmetric `CryptoKey` must be created.
@@ -83,4 +111,33 @@ export async function decryptTextSymmetrically(key, ciphertext, additionalData) 
       data.subarray(IV_BYTES)
     )
   );
+}
+
+/**
+ * @async
+ * @function unwrapKey
+ * @param {BufferSource} wrappedKey
+ * @param {CryptoKey} kek
+ * @returns {Promise<CryptoKey>}
+ * @throws {InvalidAccessError} Raised when the wrapping key is not a key for the requested wrap algorithm.
+ * @throws {NotSupported} Raised when trying to use an algorithm that is either unknown or isn't suitable for encryption or wrapping.
+ * @throws {SyntaxError} Raised when `keyUsages` is empty but the unwrapped key is of type `secret` or `private`.
+ * @throws {TypeError} Raised when trying to use an invalid format.
+ */
+export async function unwrapKey(wrappedKey, kek) {
+  return await crypto.subtle.unwrapKey("raw", wrappedKey, kek, KEY_WRAP_ALGORITHM_NAME, KEY_ENCRYPTION_PARAMS, false, KEY_ENCRYPTION_USAGES);
+}
+
+/**
+ * @async
+ * @function wrapKey
+ * @param {CryptoKey} key
+ * @param {CryptoKey} kek
+ * @returns {Promise<ArrayBuffer>}
+ * @throws {InvalidAccessError} Raised when the wrapping key is not a key for the requested wrap algorithm.
+ * @throws {NotSupported} Raised when trying to use an algorithm that is either unknown or isn't suitable for encryption or wrapping.
+ * @throws {TypeError} Raised when trying to use an invalid format.
+ */
+export async function wrapKey(key, kek) {
+  return await crypto.subtle.wrapKey("raw", key, kek, KEY_WRAP_ALGORITHM_NAME);
 }

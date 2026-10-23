@@ -1,11 +1,11 @@
 import { describe, expect, test } from "bun:test";
-import { createDek, decryptTextSymmetrically, encryptTextSymmetrically } from "#src/lib/crypto/symmetric/dek";
+import { createDek, decryptTextSymmetrically, encryptTextSymmetrically } from "#src/lib/crypto";
 
 function randomString() {
   return crypto.getRandomValues(new Uint8Array(24)).toBase64();
 }
 
-describe("DEK", () => {
+describe("Crypto DEK", () => {
   test("Generate a random symmetric CryptoKey", async () => {
     const key = await createDek();
     expect(key).toBeDefined();

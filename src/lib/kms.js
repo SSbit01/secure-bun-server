@@ -15,7 +15,7 @@
 
 import { BASE64URL_OPTIONS } from "#src/lib/base64";
 import { KEK_ID_LENGTH } from "#src/lib/computed";
-import { createKek, unwrapKey, WRAPPED_DEK_BYTES } from "#src/lib/crypto/symmetric/kek";
+import { WRAPPED_DEK_BYTES, createKek, unwrapKey } from "#src/lib/crypto";
 import { generateRandomId, isBase64UrlIdValid } from "#src/lib/id";
 
 /**
