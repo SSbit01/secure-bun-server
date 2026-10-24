@@ -1,8 +1,7 @@
 import { BASE64URL_OPTIONS } from "#src/lib/base64";
 import { compressNumber, decompressNumber } from "#src/lib/codec";
 import { ENVELOPE_ENCRYPTION_WRAP_LENGTH, KEK_ID_LENGTH, SESSION_MAX_AGE_MS } from "#src/lib/computed";
-import { COOKIE_NAME_SESSION } from "#src/lib/cookie";
-import { COOKIE_OPTIONS_SESSION } from "#src/lib/cookie/options";
+import { COOKIE_NAME_SESSION, COOKIE_OPTIONS_SESSION } from "#src/lib/cookie";
 import { createDek, decryptTextSymmetrically, encryptTextSymmetrically } from "#src/lib/crypto";
 import { createKek, wrapKey } from "#src/lib/crypto";
 import { generateRandomId, isBase64UrlIdValid } from "#src/lib/id";

@@ -1,4 +1,4 @@
-import receivesEmail from "#src/lib/email/receives";
+import receivesEmail from "#src/lib/email";
 
 /**
  * Task: rewrite this function.
