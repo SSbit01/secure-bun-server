@@ -1,4 +1,4 @@
-import production from "#src/lib/production";
+import { production } from "#src/config";
 import { SESSION_MAX_AGE } from "#src/lib/session/custom";
 
 /**
