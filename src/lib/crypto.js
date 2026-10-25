@@ -16,9 +16,11 @@ const KEY_ENCRYPTION_PARAMS = Object.freeze({
 });
 
 /**
- * @type {Readonly<KeyUsage[]>}
+ * @type {KeyUsage[]}
  */
-const KEY_ENCRYPTION_USAGES = Object.freeze(["encrypt", "decrypt"]);
+const KEY_ENCRYPTION_USAGES = ["encrypt", "decrypt"];
+
+Object.freeze(KEY_ENCRYPTION_USAGES);
 
 /**
  * @type {AesKeyGenParams}
@@ -29,9 +31,11 @@ const KEY_WRAP_PARAMS = Object.freeze({
 });
 
 /**
- * @type {readonly KeyUsage[]}
+ * @type {KeyUsage[]}
  */
-const KEY_WRAP_USAGES = Object.freeze(["wrapKey", "unwrapKey"]);
+const KEY_WRAP_USAGES = ["wrapKey", "unwrapKey"];
+
+Object.freeze(KEY_WRAP_USAGES);
 
 /**
  * 32 (original DEK size) + 8 (AES-KW overhead) = 40
