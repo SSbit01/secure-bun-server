@@ -9,8 +9,8 @@ import { createDek, createKek, encryptTextSymmetrically, wrapKey } from "#src/li
 import { generateRandomId } from "#src/lib/id";
 import { KEK_ID_BYTES, MAX_KMS_STORE_ATTEMPTS } from "#src/lib/kms";
 import { blockOtpToken, getOtpTokenList, isOtpValid, OTP_TOKEN_SEPARATOR, setOtpCookie } from "#src/lib/otp";
-import { OTP_ATTEMPTS_BLOCK } from "#src/lib/otp/custom";
 import { ATTEMPTS, CREDENTIAL, decodeOtpToken, EXPIRES, encodeOtpToken, OTP, OTP_BLOCK } from "#src/lib/otp/codec/token";
+import { OTP_ATTEMPTS_BLOCK } from "#src/lib/otp/custom";
 import { deleteOtpTokenId, replaceOtpTokenId, verifyOtpTokenId } from "#src/lib/otp/id";
 import kmsOtp from "#src/lib/otp/kms";
 import { APP_RES_INIT_204, APP_RES_INIT_403, APP_RES_INIT_DEFAULT_BAD } from "#src/lib/response/app";

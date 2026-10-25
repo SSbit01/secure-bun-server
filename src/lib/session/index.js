@@ -2,8 +2,7 @@ import { BASE64URL_OPTIONS } from "#src/lib/base64";
 import { compressNumber, decompressNumber } from "#src/lib/codec";
 import { ENVELOPE_ENCRYPTION_WRAP_LENGTH, KEK_ID_LENGTH, SESSION_MAX_AGE_MS } from "#src/lib/computed";
 import { COOKIE_NAME_SESSION, COOKIE_OPTIONS_SESSION } from "#src/lib/cookie";
-import { createDek, decryptTextSymmetrically, encryptTextSymmetrically } from "#src/lib/crypto";
-import { createKek, wrapKey } from "#src/lib/crypto";
+import { createDek, createKek, decryptTextSymmetrically, encryptTextSymmetrically, wrapKey } from "#src/lib/crypto";
 import { generateRandomId, isBase64UrlIdValid } from "#src/lib/id";
 import { KEK_ID_BYTES, MAX_KMS_STORE_ATTEMPTS } from "#src/lib/kms";
 import kmsSession from "#src/lib/session/kms";
@@ -271,15 +270,11 @@ WHERE session_id=${this.#id}`.values();
     this.#cookies.set(
       COOKIE_NAME_SESSION,
       this.#envelope +
-      (await encryptTextSymmetrically(
-        this.#dek,
-        this.#idString +
-        TOKEN_SEPARATOR +
-        compressNumber(this.#dekRotationDateMs) +
-        TOKEN_SEPARATOR +
-        compressNumber(Date.now()),
-        additionalData
-      )),
+        (await encryptTextSymmetrically(
+          this.#dek,
+          this.#idString + TOKEN_SEPARATOR + compressNumber(this.#dekRotationDateMs) + TOKEN_SEPARATOR + compressNumber(Date.now()),
+          additionalData
+        )),
       COOKIE_OPTIONS_SESSION
     );
   }

@@ -129,7 +129,15 @@ export async function decryptTextSymmetrically(key, ciphertext, additionalData) 
  * @throws {TypeError} Raised when trying to use an invalid format.
  */
 export async function unwrapKey(wrappedKey, kek) {
-  return await crypto.subtle.unwrapKey("raw", wrappedKey, kek, KEY_WRAP_ALGORITHM_NAME, KEY_ENCRYPTION_PARAMS, false, KEY_ENCRYPTION_USAGES);
+  return await crypto.subtle.unwrapKey(
+    "raw",
+    wrappedKey,
+    kek,
+    KEY_WRAP_ALGORITHM_NAME,
+    KEY_ENCRYPTION_PARAMS,
+    false,
+    KEY_ENCRYPTION_USAGES
+  );
 }
 
 /**
