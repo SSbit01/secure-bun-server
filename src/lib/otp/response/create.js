@@ -1,11 +1,11 @@
 import otpAttributes from "#shared/otp.json";
 import { BASE64URL_OPTIONS } from "#src/lib/base64";
 import { compressNumber } from "#src/lib/codec";
-import { ENVELOPE_ENCRYPTION_WRAP_LENGTH, KEK_ID_LENGTH, OTP_RESEND_BLOCK_MS } from "#src/lib/computed";
+import { OTP_RESEND_BLOCK_MS } from "#src/lib/computed";
 import { COOKIE_NAME_OTP } from "#src/lib/cookie";
 import { createDek, createKek, encryptTextSymmetrically, wrapKey } from "#src/lib/crypto";
 import { generateRandomId } from "#src/lib/id";
-import { KEK_ID_BYTES, MAX_KMS_STORE_ATTEMPTS } from "#src/lib/kms";
+import { ENVELOPE_ENCRYPTION_WRAP_LENGTH, KEK_ID_BYTES, KEK_ID_LENGTH, MAX_KMS_STORE_ATTEMPTS } from "#src/lib/kms";
 import { getOtpTokenList, OTP_TOKEN_SEPARATOR, setOtpCookie } from "#src/lib/otp";
 import { CREDENTIAL, createEncodedOtpToken, decodeOtpToken, EXPIRES, encodeOtpToken, encodeOtpTokenData } from "#src/lib/otp/codec/token";
 import { generateOtp } from "#src/lib/otp/custom";

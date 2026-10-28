@@ -13,8 +13,7 @@
  * A custom key rotation implementation with envelope encryption with a specialized KMS is recommended.
  */
 
-import { BASE64URL_OPTIONS } from "#src/lib/base64";
-import { KEK_ID_LENGTH } from "#src/lib/computed";
+import { BASE64URL_OPTIONS, bytesToBase64Length } from "#src/lib/base64";
 import { createKek, unwrapKey, WRAPPED_DEK_BYTES } from "#src/lib/crypto";
 import { generateRandomId, isBase64UrlIdValid } from "#src/lib/id";
 
@@ -32,6 +31,16 @@ const ROTATE_TIME = 7776000000; // 90 days in miliseconds.
  * @type {number}
  */
 export const KEK_ID_BYTES = 12;
+
+/**
+ * @type {number}
+ */
+export const KEK_ID_LENGTH = bytesToBase64Length(KEK_ID_BYTES);
+
+/**
+ * @type {number}
+ */
+export const ENVELOPE_ENCRYPTION_WRAP_LENGTH = KEK_ID_LENGTH + bytesToBase64Length(WRAPPED_DEK_BYTES);
 
 /**
  * @type {number}
