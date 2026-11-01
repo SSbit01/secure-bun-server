@@ -87,6 +87,7 @@ export default async function handleOtpUpdateVerification(req) {
    * @type {(OtpToken|undefined)}
    */
   let currentOtpToken;
+  
   let expires = 0;
 
   email = email?.trim();
@@ -95,11 +96,13 @@ export default async function handleOtpUpdateVerification(req) {
     email = normalizeEmail(email) || undefined;
   } else {
     currentOtpToken = decodeOtpToken(encodedOtpTokenList.pop() || "");
+
     if (!currentOtpToken) {
       cookies.delete(COOKIE_NAME_OTP);
       await Promise.allSettled([deleteOtpTokenId(id), kmsOtp.rotate(kekId)]);
       return new Response(null, APP_RES_INIT_DEFAULT_BAD);
     }
+
     expires = currentOtpToken[EXPIRES];
   }
 
@@ -107,15 +110,18 @@ export default async function handleOtpUpdateVerification(req) {
    * @type {string[]}
    */
   const newEncodedOtpTokenList = [];
+
   const dateNow = Date.now();
 
   for (const encodedOtpToken of encodedOtpTokenList) {
     const otpToken = decodeOtpToken(encodedOtpToken);
+
     if (!otpToken) {
       cookies.delete(COOKIE_NAME_OTP);
       await Promise.allSettled([deleteOtpTokenId(id), kmsOtp.rotate(kekId)]);
       return new Response(null, APP_RES_INIT_DEFAULT_BAD);
     }
+
     if (dateNow < otpToken[EXPIRES]) {
       if (expires < otpToken[EXPIRES]) {
         expires = otpToken[EXPIRES];
@@ -200,7 +206,7 @@ export default async function handleOtpUpdateVerification(req) {
 
     currentOtpToken[ATTEMPTS]--;
 
-    if (!currentOtpToken[ATTEMPTS]) {
+    if (currentOtpToken[ATTEMPTS] <= 0) {
       blockOtpToken(currentOtpToken);
       init = APP_RES_INIT_DEFAULT_BAD;
     } else if (currentOtpToken[ATTEMPTS] <= OTP_ATTEMPTS_BLOCK) {

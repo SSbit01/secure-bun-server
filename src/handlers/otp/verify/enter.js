@@ -89,11 +89,13 @@ export default async function handleOtpEnterVerification(req) {
     email = normalizeEmail(email) || undefined;
   } else {
     currentOtpToken = decodeOtpToken(encodedOtpTokenList.pop() || "");
+
     if (!currentOtpToken) {
       cookies.delete(COOKIE_NAME_OTP);
       await Promise.allSettled([deleteOtpTokenId(id), kmsOtp.rotate(kekId)]);
       return new Response(null, APP_RES_INIT_DEFAULT_BAD);
     }
+
     expires = currentOtpToken[EXPIRES];
   }
 
@@ -101,6 +103,7 @@ export default async function handleOtpEnterVerification(req) {
    * @type {string[]}
    */
   const newEncodedOtpTokenList = [];
+  
   const dateNow = Date.now();
 
   for (const encodedOtpToken of encodedOtpTokenList) {
@@ -201,7 +204,7 @@ export default async function handleOtpEnterVerification(req) {
 
     currentOtpToken[ATTEMPTS]--;
 
-    if (!currentOtpToken[ATTEMPTS]) {
+    if (currentOtpToken[ATTEMPTS] <= 0) {
       blockOtpToken(currentOtpToken);
       init = APP_RES_INIT_DEFAULT_BAD;
     } else if (currentOtpToken[ATTEMPTS] <= OTP_ATTEMPTS_BLOCK) {
